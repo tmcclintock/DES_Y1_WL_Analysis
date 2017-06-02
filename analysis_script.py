@@ -28,12 +28,29 @@ cosmo = {'h'      : 0.7,
          'ns'     : 0.96}
 h = cosmo['h'] #Hubble constant
 
-def get_data_and_cov(datapath, covpath, lowcut=0.2):
+def get_data_and_cov(datapath, covpath, lowcut = 0.2, highcut = 999):
     #lowcut is the lower cutoff, assumed to be 0.2 Mpc physical
-    return 0,0,0
+    #highcut might not be implemented in this analysis
+    R, ds, dse, dsx, dsxe = np.genfromtxt(datapath, unpack=True)
+    cov = np.genfromtxt(covpath)
+    indices = (R > lowcut)*(R < highcut)
+    R   = R[indices]
+    ds  = ds[indices]
+    cov = cov[indices]
+    cov = cov[:,indices]
+    return R, ds, cov
 
-def get_boost_data_and_cov(boostpath, boostcovpath, lowcut=0.2):
-    return 0,0
+def get_boost_data_and_cov(boostpath, boostcovpath, lowcut=0.2, highcut = 999):
+    #Radii, 1+B, B error
+    #Note: the boost factors don't have the same number of radial bins
+    #as deltasigma. This doesn't matter, because all we do is
+    #de-boost the model, which fits to the boost factors independently.
+    R, Bp1, Be = np.genfromtxt(boostpath, unpack=True)
+    indices = (R > lowcut)*(R < highcut)
+    R   = R[indices]
+    Bp1 = Bp1[indices]
+    Be  = Be[indices]
+    return R, Bp1, Be   
 
 def find_best_fit():
     import scipy.optimize as op
@@ -53,9 +70,9 @@ if __name__ == '__main__':
     #as well as the blinding status
     base  = "/home/tmcclintock/Desktop/des_wl_work/Y1_work/data_files/"
     base2 = base+"%s_tamas_files/"%bstatus
-    database     = base2+"full-mcal-raw-y1subtr_l%d_z%d_profile.dat"
-    covbase      = base2+"full-mcal-raw-y1subtr_l%d_z%d_dst_cov.dat"
-    boostbase    = base2+"full-mcal-raw-y1clust_l%d_z%d_ps_boost.dat"
+    database     = base2+"full-mcal-raw_y1subtr_l%d_z%d_profile.dat"
+    covbase      = base2+"full-mcal-raw_y1subtr_l%d_z%d_dst_cov.dat"
+    boostbase    = base2+"full-mcal-raw_y1clust_l%d_z%d_pz_boost.dat"
     boostcovbase = "alsothis" #DOESN'T EXIST YET
     
     #Output suffix to be appended on things
@@ -71,15 +88,15 @@ if __name__ == '__main__':
     #Loop over bins
     for i in xrange(0, 3): #z bins
         for j in xrange(0, 7): #lambda bins
-            suffix = basesuffix%(i,j)
+            #Read in everything
             z = zs[i,j]
             lam = lams[i,j]
+            suffix = basesuffix%(i,j)
             datapath     = database%(j,i)
             covpath      = covbase%(j,i)
             boostpath    = boostbase%(j,i)
             boostcovpath = boostcovbase%()
             bestfitpath  = bestfitbase%(i,j)
             chainpath    = chainbase%(i,j)
-
-            R, DSdata, DScov = get_data_and_cov(datapath, covpath)
-            boost,bcov = get_boost_data_and_cov(boostpath, boostcovpath)
+            R, ds, cov = get_data_and_cov(datapath, covpath)
+            Rb, Bp1, Be = get_boost_data_and_cov(boostpath, boostcovpath)
