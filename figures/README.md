@@ -1,0 +1,1 @@
+This directory contains figures, which may or may not end up on github.

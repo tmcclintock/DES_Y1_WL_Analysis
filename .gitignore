@@ -1,3 +1,7 @@
+# text files that shouldn't go on github
+chains/*.txt
+bestfits/*.txt
+
 # emacs back up files
 *~
 
