@@ -29,7 +29,7 @@ cosmo = {'h'      : 0.7,
          'ns'     : 0.96}
 h = cosmo['h'] #Hubble constant
 
-#Dictionary of default guesses for the best fit
+#Dictionary of default starting points for the best fit
 defaults = {'lM'   : 13.5,
            'c'    : 4.0,
            'Rmis' : 0.3,
@@ -77,7 +77,7 @@ def do_mcmc():
 if __name__ == '__main__':
     #This specifies which analysis we are doing
     #Name options are full, fixed or Afixed
-    name = "fixed" 
+    name = "full" 
     bstatus  = "blinded" #blinded or unblinded
 
     #These are the basic paths to the data
@@ -108,9 +108,7 @@ if __name__ == '__main__':
     for i in xrange(0, 3): #z bins
         if i > 0: continue
         for j in xrange(0, 7): #lambda bins
-            if j < 0:
-                continue
-            print i,j
+            if j < 0: continue
             #Read in everything
             z    = zs[i,j]
             lam  = lams[i,j]
