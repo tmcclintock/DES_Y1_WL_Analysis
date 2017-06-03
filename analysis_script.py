@@ -15,46 +15,60 @@ in this repository yet.
 """
 import numpy as np
 from likelihood_functions import *
+from get_all_data import *
 import figure_routines
 import sys
 
 #The cosmology used in this analysis
 cosmo = {'h'      : 0.7,
-         'Om'     : 0.3,
-         'Ode'    : 0.7,
-         'Ob'     : 0.05,
-         'Ok'     : 0.0,
+         'om'     : 0.3,
+         'ode'    : 0.7,
+         'ob'     : 0.05,
+         'ok'     : 0.0,
          'sigma8' : 0.8,
          'ns'     : 0.96}
 h = cosmo['h'] #Hubble constant
 
-def get_data_and_cov(datapath, covpath, lowcut = 0.2, highcut = 999):
-    #lowcut is the lower cutoff, assumed to be 0.2 Mpc physical
-    #highcut might not be implemented in this analysis
-    R, ds, dse, dsx, dsxe = np.genfromtxt(datapath, unpack=True)
-    cov = np.genfromtxt(covpath)
-    indices = (R > lowcut)*(R < highcut)
-    R   = R[indices]
-    ds  = ds[indices]
-    cov = cov[indices]
-    cov = cov[:,indices]
-    return R, ds, cov
+#Dictionary of default guesses for the best fit
+defaults = {'lM'   : 13.5,
+           'c'    : 4.0,
+           'Rmis' : 0.3,
+           'fmis' : 0.22,
+           'A'    : 1.0,
+           'B0'   : -0.056,
+           'Cl'   : 0.495,
+           'Dz'   : -5.16,
+           'ER'   : -0.85}
 
-def get_boost_data_and_cov(boostpath, boostcovpath, lowcut=0.2, highcut = 999):
-    #Radii, 1+B, B error
-    #Note: the boost factors don't have the same number of radial bins
-    #as deltasigma. This doesn't matter, because all we do is
-    #de-boost the model, which fits to the boost factors independently.
-    R, Bp1, Be = np.genfromtxt(boostpath, unpack=True)
-    indices = (R > lowcut)*(R < highcut)
-    R   = R[indices]
-    Bp1 = Bp1[indices]
-    Be  = Be[indices]
-    return R, Bp1, Be   
-
-def find_best_fit():
+def find_best_fit(bf_args, name, bestfitpath):
+    #Take out all of the arguments
+    ds_args, boost_args, P_args, cuts, z, lam, Rlam, zs, lams, cosmo = bf_args
+    R, ds, icov, ds_params = ds_args
+    Rb, Bp1, Be = boost_args
+    k, Plin, Pnl = P_args
+    #Switch between which model we are working with
+    if name is "full":
+        guess = [defaults['lM'], defaults['c'], defaults['Rmis'],
+                 defaults['fmis'], defaults['A'], defaults['B0'],
+                 defaults['Cl'], defaults['Dz'], defaults['ER']]
+    elif name is 'fixed':
+        guess = [defaults['lM'], defaults['c']]
+    else: #'Afixed'
+        guess = [defaults['lM'], defaults['c'], defaults['Rmis'],
+                 defaults['fmis'], defaults['B0'],
+                 defaults['Cl'], defaults['Dz'], defaults['ER']]
+    #Perform a max-likelihood analysis to find the best parameters to start the MCMC
     import scipy.optimize as op
-    return 0
+    lnprob_args = (name, R, ds, icov, Rb, Bp1, Be, z, lam, Rlam, 
+                   zs, lams, defaults, cuts, (ds_params, k, Plin, Pnl, cosmo))
+    nll = lambda *args: -lnprob(*args)
+    result = op.minimize(nll, guess, args=lnprob_args, tol=1e-3)
+    print "Best fit being saved at :\n%s"%bestfitpath
+    print "\tresults: ",result['x']
+    print "\tsucces = %s"%result['success']
+    #print result
+    np.savetxt(bestfitpath, result['x'])
+    return 
 
 def do_mcmc():
     import emcee
@@ -62,7 +76,8 @@ def do_mcmc():
 
 if __name__ == '__main__':
     #This specifies which analysis we are doing
-    analysis = "full" #"fixed", "Afixed"
+    #Name options are full, fixed or Afixed
+    name = "fixed" 
     bstatus  = "blinded" #blinded or unblinded
 
     #These are the basic paths to the data
@@ -74,29 +89,63 @@ if __name__ == '__main__':
     covbase      = base2+"full-mcal-raw_y1subtr_l%d_z%d_dst_cov.dat"
     boostbase    = base2+"full-mcal-raw_y1clust_l%d_z%d_pz_boost.dat"
     boostcovbase = "alsothis" #DOESN'T EXIST YET
+    kpath        = "P_files/k.txt"
+    Plinpath     = "P_files/plin_z%d_l%d.txt"
+    Pnlpath      = "P_files/pnl_z%d_l%d.txt"
     
     #Output suffix to be appended on things
-    basesuffix = bstatus+"_"+analysis+"_z%d_l%d"
+    basesuffix = bstatus+"_"+name+"_z%d_l%d"
     
     #Read in the redshifts and richnesses
-    zs   = np.genfromtxt(base+"Y1_meanz.txt")
-    lams = np.genfromtxt(base+"Y1_meanl.txt")
+    zs    = np.genfromtxt(base+"Y1_meanz.txt")
+    lams  = np.genfromtxt(base+"Y1_meanl.txt")
+    Rlams = 1.0*(lams/100.0)**0.2 #Mpc/h; richness radius
 
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
     chainbase   = "chains/chain_%s.txt"%basesuffix
 
     #Loop over bins
     for i in xrange(0, 3): #z bins
+        if i > 0: continue
         for j in xrange(0, 7): #lambda bins
+            if j < 0:
+                continue
+            print i,j
             #Read in everything
-            z = zs[i,j]
-            lam = lams[i,j]
+            z    = zs[i,j]
+            lam  = lams[i,j]
+            Rlam = Rlams[i,j]
             suffix = basesuffix%(i,j)
             datapath     = database%(j,i)
             covpath      = covbase%(j,i)
-            boostpath    = boostbase%(j,i)
+            boostpath    = boostbase
             boostcovpath = boostcovbase%()
             bestfitpath  = bestfitbase%(i,j)
             chainpath    = chainbase%(i,j)
-            R, ds, cov = get_data_and_cov(datapath, covpath)
-            Rb, Bp1, Be = get_boost_data_and_cov(boostpath, boostcovpath)
+            #Note: convert Rlam to Mpc physical when we get the data for the cuts
+            R, ds, icov = get_data_and_icov(datapath, covpath)
+            Rb, Bp1, Be = get_boost_data_and_cov(boostpath, boostcovpath, zs, lams, Rlams*1.5/h/(1+zs))
+            k    = np.genfromtxt(kpath)
+            Plin = np.genfromtxt(Plinpath%(i,j))
+            Pnl  = np.genfromtxt(Pnlpath%(i,j))
+
+            #DeltaSigma module parameters
+            ds_params = {'NR'        : 300,
+                         'Rmin'      : 0.01,
+                         'Rmax'      : 200.0,
+                         'Nbins'     : 15,
+                         'R_bin_min' : 0.0323*h*(1+z), #Mpc/h comoving
+                         'R_bin_max' : 30.0*h*(1+z), #Mpc/h comoving
+                         'delta'     : 200,
+                         'miscentering' : 1,
+                         'averaging'    : 1}
+
+            #Group everything up for convenience
+            ds_args = (R, ds, icov, ds_params)
+            boost_args = (Rb, Bp1, Be)
+            P_args = (k, Plin, Pnl)
+            cuts = (0.2, 999) #Radial cuts, Mpc comoving
+            bf_args = (ds_args, boost_args, P_args, cuts, z, lam, Rlam, zs, lams, cosmo)
+
+            #Flow control for whatever you want to do
+            find_best_fit(bf_args, name, bestfitpath)
