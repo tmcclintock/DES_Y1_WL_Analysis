@@ -4,7 +4,7 @@ and boost factor data.
 """
 import numpy as np
 
-def get_data_and_cov(datapath, covpath, lowcut = 0.2, highcut = 999):
+def get_data_and_icov(datapath, covpath, lowcut = 0.2, highcut = 999):
     #lowcut is the lower cutoff, assumed to be 0.2 Mpc physical
     #highcut might not be implemented in this analysis
     R, ds, dse, dsx, dsxe = np.genfromtxt(datapath, unpack=True)
@@ -14,7 +14,7 @@ def get_data_and_cov(datapath, covpath, lowcut = 0.2, highcut = 999):
     ds  = ds[indices]
     cov = cov[indices]
     cov = cov[:,indices]
-    return R, ds, cov
+    return R, ds, np.linalg.inv(cov)
 
 def get_boost_data_and_cov(boostpath, boostcovpath, zs, lams, highcuts, lowcut=0.2):
     #Radii, 1+B, B error
