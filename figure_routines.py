@@ -5,6 +5,7 @@ figures for the paper.
 """
 import numpy as np
 from get_all_data import *
+from models import *
 import os, sys
 import matplotlib.pyplot as plt
 
