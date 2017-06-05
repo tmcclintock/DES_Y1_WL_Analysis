@@ -14,7 +14,7 @@ def get_data_and_icov(datapath, covpath, lowcut = 0.2, highcut = 999):
     ds  = ds[indices]
     cov = cov[indices]
     cov = cov[:,indices]
-    return R, ds, np.linalg.inv(cov)
+    return R, ds, np.linalg.inv(cov), cov
 
 def get_boost_data_and_cov(boostpath, boostcovpath, zs, lams, highcuts, lowcut=0.2):
     #Radii, 1+B, B error
@@ -45,3 +45,41 @@ def get_boost_data_and_cov(boostpath, boostcovpath, zs, lams, highcuts, lowcut=0
         Be.append(Bei)
         Rb.append(Rbi)
     return Rb, Bp1, Be   
+
+def get_default_ds_params(z, h):
+    #DeltaSigma module parameters
+    ds_params = {'NR'        : 300,
+                 'Rmin'      : 0.01,
+                 'Rmax'      : 200.0,
+                 'Nbins'     : 15,
+                 'R_bin_min' : 0.0323*h*(1+z), #Mpc/h comoving
+                 'R_bin_max' : 30.0*h*(1+z), #Mpc/h comoving
+                 'delta'     : 200,
+                 'miscentering' : 1,
+                 'averaging'    : 1,
+                 'single_miscentering': 0}
+    return ds_params
+
+def get_model_defaults(h):
+    #Dictionary of default starting points for the best fit
+    defaults = {'lM'   : 14.37+np.log10(h),
+                'c'    : 5.0,
+                'Rmis' : -1.12631563312, #Need to do Rlam*exp(this)
+                'fmis' : 0.22,
+                'A'    : 1.02,
+                'B0'   : -0.056,
+                'Cl'   : 0.495,
+                'Dz'   : -5.16,
+                'ER'   : -0.85}
+    return defaults
+
+def get_cosmo_default():
+    #The cosmology used in this analysis
+    cosmo = {'h'      : 0.7,
+             'om'     : 0.3,
+             'ode'    : 0.7,
+             'ob'     : 0.05,
+             'ok'     : 0.0,
+             'sigma8' : 0.8,
+             'ns'     : 0.96}
+    return cosmo

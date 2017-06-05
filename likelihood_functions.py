@@ -27,12 +27,12 @@ def lnprior(params, name, defaults, Rlam):
     #a clever way of specifying which prior to use.
     #These are the priors on the lensing parameters
     #Note: Rlam is Mpc/h here
-    LPfmis = -0.5*(0.22 - fmis)**2/0.11**2
-    LPRmis = -0.5*(-1.12631563312 - np.log(Rmis/Rlam))**2/0.223613966662**2
-    LPA    = -0.5*(1.02 - A)**2/0.038**2 #NEEDS TO BE UPDATED FROM SV
+    LPfmis = (0.22 - fmis)**2/0.11**2
+    LPRmis = (-1.12631563312 - np.log(Rmis/Rlam))**2/0.223613966662**2
+    LPA    = (1.02 - A)**2/0.038**2 #NEEDS TO BE UPDATED FROM SV
     #Priors on boost factor parameters, if we want to use them.
     #these might come from doing the independent boost factor analysis.
-    return LPfmis + LPRmis + LPA
+    return -0.5*(LPfmis + LPRmis + LPA)
 
 """
 Log posterior of the boost factor model
@@ -56,7 +56,7 @@ Third calculates the boost model for this redshift/richness bin
 Fourth makes cuts at the correct scales
 Fifth finds -chi^2/2
 """
-def lnlike_DS(params, name, R, ds, icov, z, lam, defaults, cuts, extras):
+def lnlike_DS(params, name, ds, icov, z, lam, defaults, cuts, extras):
     lM, c, Rmis, fmis, A, B0, Cl, Dz, ER = model_swap(params, name, defaults)
     lowcut, highcut = cuts
     LLDS = 0
@@ -82,9 +82,9 @@ First calls the prior
 Second calls the log likelihood of the boost factor model
 Third calls the log likelihood of the DeltaSigma model
 """
-def lnprob(params, name, R, ds, icov, Rb, Bp1, Be, z, lam, Rlam, zs, lams, defaults, cuts, extras):
+def lnprob(params, name, ds, icov, Rb, Bp1, Be, z, lam, Rlam, zs, lams, defaults, cuts, extras):
     lpr = lnprior(params, name, defaults, Rlam)
     if not np.isfinite(lpr): return -np.inf
     return lpr + \
         lnlike_boost(params, name, Rb, Bp1, Be, zs, lams, defaults) + \
-        lnlike_DS(params, name, R, ds, icov, z, lam, defaults, cuts, extras)
+        lnlike_DS(params, name, ds, icov, z, lam, defaults, cuts, extras)

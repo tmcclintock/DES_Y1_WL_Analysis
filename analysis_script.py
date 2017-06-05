@@ -19,26 +19,10 @@ from get_all_data import *
 import figure_routines
 import sys
 
-#The cosmology used in this analysis
-cosmo = {'h'      : 0.7,
-         'om'     : 0.3,
-         'ode'    : 0.7,
-         'ob'     : 0.05,
-         'ok'     : 0.0,
-         'sigma8' : 0.8,
-         'ns'     : 0.96}
+#Set up the assumptions
+cosmo = get_cosmo_default()
 h = cosmo['h'] #Hubble constant
-
-#Dictionary of default starting points for the best fit
-defaults = {'lM'   : 14.37+np.log10(h),
-           'c'    : 5.0,
-           'Rmis' : -1.12631563312, #Need to do Rlam*exp(this)
-           'fmis' : 0.22,
-           'A'    : 1.02,
-           'B0'   : -0.056,
-           'Cl'   : 0.495,
-           'Dz'   : -5.16,
-           'ER'   : -0.85}
+defaults = get_model_defaults(cosmo['h'])
 
 def find_best_fit(bf_args, name, bestfitpath):
     #Take out all of the arguments
@@ -65,7 +49,7 @@ def find_best_fit(bf_args, name, bestfitpath):
                  defaults['Cl'], defaults['Dz'], defaults['ER']]
     #Perform a max-likelihood analysis to find the best parameters to start the MCMC
     import scipy.optimize as op
-    lnprob_args = (name, R, ds, icov, Rb, Bp1, Be, z, lam, Rlam, 
+    lnprob_args = (name, ds, icov, Rb, Bp1, Be, z, lam, Rlam, 
                    zs, lams, defaults, cuts, (ds_params, k, Plin, Pnl, cosmo))
     nll = lambda *args: -lnprob(*args)
     result = op.minimize(nll, guess, args=lnprob_args, tol=1e-2)
@@ -129,23 +113,12 @@ if __name__ == '__main__':
             bestfitpath  = bestfitbase%(i,j)
             chainpath    = chainbase%(i,j)
             #Note: convert Rlam to Mpc physical when we get the data for the cuts
-            R, ds, icov = get_data_and_icov(datapath, covpath)
+            R, ds, icov, cov = get_data_and_icov(datapath, covpath)
             Rb, Bp1, Be = get_boost_data_and_cov(boostpath, boostcovpath, zs, lams, Rlams*1.5/h/(1+zs))
             k    = np.genfromtxt(kpath)
             Plin = np.genfromtxt(Plinpath%(i,j))
             Pnl  = np.genfromtxt(Pnlpath%(i,j))
-
-            #DeltaSigma module parameters
-            ds_params = {'NR'        : 300,
-                         'Rmin'      : 0.01,
-                         'Rmax'      : 200.0,
-                         'Nbins'     : 15,
-                         'R_bin_min' : 0.0323*h*(1+z), #Mpc/h comoving
-                         'R_bin_max' : 30.0*h*(1+z), #Mpc/h comoving
-                         'delta'     : 200,
-                         'miscentering' : 1,
-                         'averaging'    : 1,
-                         'single_miscentering': 0}
+            ds_params = get_default_ds_params(z, h)
 
             #Group everything up for convenience
             ds_args = (R, ds, icov, ds_params)

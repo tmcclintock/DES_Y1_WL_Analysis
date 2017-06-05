@@ -9,16 +9,13 @@ from models import *
 import os, sys
 import matplotlib.pyplot as plt
 
-#The fiducial cosmology used in this analysis
-cosmo = {'h'      : 0.7,
-         'om'     : 0.3,
-         'ode'    : 0.7,
-         'ob'     : 0.05,
-         'ok'     : 0.0,
-         'sigma8' : 0.8,
-         'ns'     : 0.96}
+#Set up the assumptions
+cosmo = get_cosmo_default()
 h = cosmo['h'] #Hubble constant
+defaults = get_model_defaults(cosmo['h'])
 
+def plot_DS_fit_one_bin(params, name, data):
+    return 0
 
 if __name__ == '__main__':
     #This specifies which analysis we are doing
@@ -49,3 +46,20 @@ if __name__ == '__main__':
 
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
     chainbase   = "chains/chain_%s.txt"%basesuffix
+
+    for i in xrange(0, 3): #z bins
+        if i > 0: continue
+        for j in xrange(0, 7): #lambda bins
+            if j > 0: continue
+            print "Working at z%d l%d for %s"%(i,j,name)
+            #Read in everything
+            z    = zs[i,j]
+            lam  = lams[i,j]
+            Rlam = Rlams[i,j]
+            datapath     = database%(j,i)
+            covpath      = covbase%(j,i)
+            R, ds, icov, cov = get_data_and_icov(datapath, covpath)
+            k    = np.genfromtxt(kpath)
+            Plin = np.genfromtxt(Plinpath%(i,j))
+            Pnl  = np.genfromtxt(Pnlpath%(i,j))
+            ds_params = get_default_ds_params(z, h)
