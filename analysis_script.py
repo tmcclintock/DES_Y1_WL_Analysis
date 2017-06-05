@@ -30,11 +30,11 @@ cosmo = {'h'      : 0.7,
 h = cosmo['h'] #Hubble constant
 
 #Dictionary of default starting points for the best fit
-defaults = {'lM'   : 13.5,
-           'c'    : 4.0,
-           'Rmis' : 0.3,
+defaults = {'lM'   : 14.37+np.log10(h),
+           'c'    : 5.0,
+           'Rmis' : -1.12631563312, #Need to do Rlam*exp(this)
            'fmis' : 0.22,
-           'A'    : 1.0,
+           'A'    : 1.02,
            'B0'   : -0.056,
            'Cl'   : 0.495,
            'Dz'   : -5.16,
@@ -48,13 +48,19 @@ def find_best_fit(bf_args, name, bestfitpath):
     k, Plin, Pnl = P_args
     #Switch between which model we are working with
     if name is "full":
-        guess = [defaults['lM'], defaults['c'], defaults['Rmis'],
+        guess = [defaults['lM']+np.log(lam/30.)*1.12/np.log(10), 
+                 defaults['c'],
+                 Rlam*np.exp(defaults['Rmis']),
                  defaults['fmis'], defaults['A'], defaults['B0'],
                  defaults['Cl'], defaults['Dz'], defaults['ER']]
     elif name is 'fixed':
-        guess = [defaults['lM'], defaults['c']]
+        guess = [defaults['lM']+np.log(lam/30.)*1.12/np.log(10), 
+                 defaults['c']]
+        defaults['Rmis'] = Rlam*np.exp(defaults['Rmis'])
     else: #'Afixed'
-        guess = [defaults['lM'], defaults['c'], defaults['Rmis'],
+        guess = [defaults['lM']+np.log(lam/30.)*1.12/np.log(10), 
+                 defaults['c'], 
+                 Rlam*np.exp(defaults['Rmis']),
                  defaults['fmis'], defaults['B0'],
                  defaults['Cl'], defaults['Dz'], defaults['ER']]
     #Perform a max-likelihood analysis to find the best parameters to start the MCMC
@@ -62,12 +68,13 @@ def find_best_fit(bf_args, name, bestfitpath):
     lnprob_args = (name, R, ds, icov, Rb, Bp1, Be, z, lam, Rlam, 
                    zs, lams, defaults, cuts, (ds_params, k, Plin, Pnl, cosmo))
     nll = lambda *args: -lnprob(*args)
-    result = op.minimize(nll, guess, args=lnprob_args, tol=1e-3)
+    result = op.minimize(nll, guess, args=lnprob_args, tol=1e-2)
     print "Best fit being saved at :\n%s"%bestfitpath
     print "\tresults: ",result['x']
     print "\tsucces = %s"%result['success']
     #print result
     np.savetxt(bestfitpath, result['x'])
+    defaults['Rmis'] = -1.12631563312 #Reset this value
     return 
 
 def do_mcmc():
@@ -77,7 +84,7 @@ def do_mcmc():
 if __name__ == '__main__':
     #This specifies which analysis we are doing
     #Name options are full, fixed or Afixed
-    name = "full" 
+    name = "fixed" 
     bstatus  = "blinded" #blinded or unblinded
 
     #These are the basic paths to the data
@@ -99,7 +106,7 @@ if __name__ == '__main__':
     #Read in the redshifts and richnesses
     zs    = np.genfromtxt(base+"Y1_meanz.txt")
     lams  = np.genfromtxt(base+"Y1_meanl.txt")
-    Rlams = 1.0*(lams/100.0)**0.2 #Mpc/h; richness radius
+    Rlams = (lams/100.0)**0.2 #Mpc/h; richness radius
 
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
     chainbase   = "chains/chain_%s.txt"%basesuffix
@@ -108,7 +115,8 @@ if __name__ == '__main__':
     for i in xrange(0, 3): #z bins
         if i > 0: continue
         for j in xrange(0, 7): #lambda bins
-            if j < 0: continue
+            if j > 0: continue
+            print "Working at z%d l%d for %s"%(i,j,name)
             #Read in everything
             z    = zs[i,j]
             lam  = lams[i,j]
@@ -136,13 +144,14 @@ if __name__ == '__main__':
                          'R_bin_max' : 30.0*h*(1+z), #Mpc/h comoving
                          'delta'     : 200,
                          'miscentering' : 1,
-                         'averaging'    : 1}
+                         'averaging'    : 1,
+                         'single_miscentering': 0}
 
             #Group everything up for convenience
             ds_args = (R, ds, icov, ds_params)
             boost_args = (Rb, Bp1, Be)
             P_args = (k, Plin, Pnl)
-            cuts = (0.2, 999) #Radial cuts, Mpc comoving
+            cuts = (0.2, 999) #Radial cuts, Mpc physical
             bf_args = (ds_args, boost_args, P_args, cuts, z, lam, Rlam, zs, lams, cosmo)
 
             #Flow control for whatever you want to do
