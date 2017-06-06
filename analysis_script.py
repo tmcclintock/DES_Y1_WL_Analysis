@@ -41,6 +41,11 @@ def find_best_fit(bf_args, name, bestfitpath):
         guess = [defaults['lM']+np.log(lam/30.)*1.12/np.log(10), 
                  defaults['c']]
         defaults['Rmis'] = Rlam*np.exp(defaults['Rmis'])
+    elif name is "boostfixed":
+        guess = [defaults['lM']+np.log(lam/30.)*1.12/np.log(10), 
+                 defaults['c'],
+                 Rlam*np.exp(defaults['Rmis']),
+                 defaults['fmis'], defaults['A']]
     else: #'Afixed'
         guess = [defaults['lM']+np.log(lam/30.)*1.12/np.log(10), 
                  defaults['c'], 
@@ -52,10 +57,10 @@ def find_best_fit(bf_args, name, bestfitpath):
     lnprob_args = (name, ds, icov, Rb, Bp1, Be, z, lam, Rlam, 
                    zs, lams, defaults, cuts, (ds_params, k, Plin, Pnl, cosmo))
     nll = lambda *args: -lnprob(*args)
-    result = op.minimize(nll, guess, args=lnprob_args, tol=1e-2)
+    result = op.minimize(nll, guess, args=lnprob_args, tol=1e-1)
     print "Best fit being saved at :\n%s"%bestfitpath
     print "\tresults: ",result['x']
-    print "\tsucces = %s"%result['success']
+    print "\tsuccess = %s"%result['success']
     #print result
     np.savetxt(bestfitpath, result['x'])
     defaults['Rmis'] = -1.12631563312 #Reset this value
@@ -67,8 +72,8 @@ def do_mcmc():
 
 if __name__ == '__main__':
     #This specifies which analysis we are doing
-    #Name options are full, fixed or Afixed
-    name = "fixed" 
+    #Name options are full, fixed, boostfixed or Afixed
+    name = "boostfixed" 
     bstatus  = "blinded" #blinded or unblinded
 
     #These are the basic paths to the data
@@ -97,9 +102,9 @@ if __name__ == '__main__':
 
     #Loop over bins
     for i in xrange(0, 3): #z bins
-        if i > 0: continue
+        if i < 2: continue
         for j in xrange(0, 7): #lambda bins
-            if j > 0: continue
+            if j > 7: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             #Read in everything
             z    = zs[i,j]

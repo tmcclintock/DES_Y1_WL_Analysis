@@ -6,9 +6,7 @@ NOTE: I need to move the dependenceo of py_Delta_Sigma into the models.py file.
 """
 import numpy as np
 import os, sys
-sys.path.insert(0, "../Delta-Sigma/src/wrapper/")
 from models import *
-import py_Delta_Sigma as pyDS
 
 """
 Log prior
@@ -19,7 +17,7 @@ Fourth (not implemented) applies priors to the boost factor parameters
 """
 def lnprior(params, name, defaults, Rlam):
     lM, c, Rmis, fmis, A, B0, Cl, Dz, ER = model_swap(params, name, defaults)
-    if lM < 11.0 or lM > 18.0 or c <= 0.0 or A <= 0.0: return -np.inf
+    if lM < 11.0 or lM > 18.0 or c <= 0.0 or c > 20.0 or A <= 0.0 or Rmis <= 0.0: return -np.inf
     #if B0 >= 0.0 or Cl < 0.0 or Dz > 0.0 or ER > 0.0: return -np.inf
     #Priors on Rmis, fmix, A, B0, Cl, Dz, ER
     #NOTE: priors from SV used. The one on A is wrong and hasn't been

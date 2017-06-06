@@ -4,16 +4,17 @@ and boost factor data.
 """
 import numpy as np
 
-def get_data_and_icov(datapath, covpath, lowcut = 0.2, highcut = 999):
+def get_data_and_icov(datapath, covpath, lowcut = 0.2, highcut = 999, alldata=False):
     #lowcut is the lower cutoff, assumed to be 0.2 Mpc physical
     #highcut might not be implemented in this analysis
     R, ds, dse, dsx, dsxe = np.genfromtxt(datapath, unpack=True)
     cov = np.genfromtxt(covpath)
     indices = (R > lowcut)*(R < highcut)
-    R   = R[indices]
-    ds  = ds[indices]
-    cov = cov[indices]
-    cov = cov[:,indices]
+    if not alldata: #If we need to make the cuts
+        R   = R[indices]
+        ds  = ds[indices]
+        cov = cov[indices]
+        cov = cov[:,indices]
     return R, ds, np.linalg.inv(cov), cov
 
 def get_boost_data_and_cov(boostpath, boostcovpath, zs, lams, highcuts, lowcut=0.2):

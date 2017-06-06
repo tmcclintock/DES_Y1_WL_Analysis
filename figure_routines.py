@@ -8,19 +8,66 @@ from get_all_data import *
 from models import *
 import os, sys
 import matplotlib.pyplot as plt
+plt.rc("text", usetex=True, fontsize=24)
+plt.rc("errorbar", capsize=3)
+
+DSlabel = r"$\Delta\Sigma\ [{\rm M_\odot/pc^2}]$"
+Rlabel  = r"$R\ [{\rm Mpc}]$"
+zlabels = [r"$z\in[0.2;0.35)$", r"$z\in[0.35;0.5)$", r"$z\in[0.5;0.65)$"]
+llabels = [r"$\lambda\in[5;10)$",r"$\lambda\in[10;14)$",r"$\lambda\in[14;20)$",
+           r"$\lambda\in[20;30)$",r"$\lambda\in[30;45)$",r"$\lambda\in[45;60)$",
+           r"$\lambda\in[60;\infty)$"]
 
 #Set up the assumptions
 cosmo = get_cosmo_default()
 h = cosmo['h'] #Hubble constant
-defaults = get_model_defaults(cosmo['h'])
+defaults = get_model_defaults(h)
 
-def plot_DS_fit_one_bin(params, name, data):
-    return 0
+#Calculate all parts of the delta sigma model
+#Output units are all Msun/pc^2 and Mpc physical
+def calc_DS_all(params, name, defaults, z, lam, extras):
+    ds_params, k, Plin, Pnl, cosmo = extras
+    results = get_delta_sigma(params, name, ds_params, k, Plin, Pnl, cosmo, defaults)
+    lM, c, Rmis, fmis, A, B0, Cl, Dz, ER = model_swap(params, name, defaults)
+    result = get_delta_sigma(params, name, ds_params, k, Plin, Pnl, 
+                             cosmo, defaults)
+
+    #Convert to Mpc physical
+    R = result['R']/(h*(1+z))
+    #Convert to Msun/pc^2 physical
+    dsc = result['delta_sigma']*h*(1+z)**2 
+    dsm = result['miscentered_delta_sigma']*h*(1+z)**2
+    boost_model = get_boost_model(params, lam, z, R, name, defaults) 
+    dsfull = A*(dsc*(1.-fmis) + fmis*dsm)/boost_model
+    return [R, dsc, dsm, boost_model, dsfull]
+
+def plot_DS_in_bin(params, name, defaults, z, lam, R, ds, cov, extras, cuts, i,j):
+    lo,hi = cuts
+    good = (lo<R)*(R<hi)
+    bad  = (lo>R)+(R>hi)
+    dserr = np.sqrt(np.diag(cov))
+    Rmodel, dsc, dsm, boost, dsfull = calc_DS_all(params,name,
+                                                  defaults,z,lam,extras)
+    plt.errorbar(R[good], ds[good], dserr[good], c='k', marker='o', 
+                 ls='', markersize=3, zorder=1)
+    plt.errorbar(R[bad], ds[bad], dserr[bad], c='k', marker='o', mfc='w', 
+                 markersize=3, ls='', zorder=1)
+    plt.loglog(Rmodel, dsfull, c='r', zorder=0)
+    plt.loglog(Rmodel, dsm, c='b', ls='--', zorder=-1)
+    plt.loglog(Rmodel, dsc, c='k', ls='-.', zorder=-3)
+    plt.loglog(Rmodel, dsfull*boost, c='b', ls='-', zorder=-2)
+    plt.ylabel(DSlabel)
+    plt.xlabel(Rlabel)
+    plt.title("%s %s"%(zlabels[i], llabels[j]))
+    plt.subplots_adjust(bottom=0.17, left=0.2)
+    plt.ylim(0.1, 1e3)
+    plt.xlim(0.03, 50.)
+    plt.show()
 
 if __name__ == '__main__':
     #This specifies which analysis we are doing
     #Name options are full, fixed or Afixed
-    name = "full" 
+    name = "boostfixed" 
     bstatus  = "blinded" #blinded or unblinded
 
     #These are the basic paths to the data
@@ -48,9 +95,9 @@ if __name__ == '__main__':
     chainbase   = "chains/chain_%s.txt"%basesuffix
 
     for i in xrange(0, 3): #z bins
-        if i > 0: continue
+        if i < 2: continue
         for j in xrange(0, 7): #lambda bins
-            if j > 0: continue
+            if j > 7: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             #Read in everything
             z    = zs[i,j]
@@ -58,8 +105,15 @@ if __name__ == '__main__':
             Rlam = Rlams[i,j]
             datapath     = database%(j,i)
             covpath      = covbase%(j,i)
-            R, ds, icov, cov = get_data_and_icov(datapath, covpath)
+            bestfitpath  = bestfitbase%(i,j)
+            R, ds, icov, cov = get_data_and_icov(datapath, covpath, alldata=True)
             k    = np.genfromtxt(kpath)
             Plin = np.genfromtxt(Plinpath%(i,j))
             Pnl  = np.genfromtxt(Pnlpath%(i,j))
             ds_params = get_default_ds_params(z, h)
+            cuts = (0.2, 999) #Radial cuts, Mpc physical
+            extras = [ds_params, k, Plin, Pnl, cosmo]
+
+            #Find the best fit model
+            params = np.loadtxt(bestfitpath)
+            plot_DS_in_bin(params, name, defaults, z, lam, R, ds, cov, extras, cuts, i, j)

@@ -15,6 +15,8 @@ def model_swap(params, name, defaults):
         lM, c, Rmis, fmis, A, B0, Cl, Dz, ER = params
     elif name is "fixed":
         lM, c = params
+    elif name is "boostfixed":
+        lM, c, Rmis, fmis, A = params
     else: #Afixed
         lM, c, Rmis, fmis, B0, Cl, Dz, ER = params
         A = defaults['A']
