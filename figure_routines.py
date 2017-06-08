@@ -55,10 +55,10 @@ def plot_DS_in_bin(params, name, defaults, z, lam, R, ds, cov, extras, cuts, i,j
     plt.loglog(Rmodel, dsfull, c='r', zorder=0)
     plt.loglog(Rmodel, dsm, c='b', ls='--', zorder=-1)
     plt.loglog(Rmodel, dsc, c='k', ls='-.', zorder=-3)
-    plt.loglog(Rmodel, dsfull*boost, c='b', ls='-', zorder=-2)
+    plt.loglog(Rmodel, dsfull*boost, c='g', ls='-', zorder=-2)
     plt.ylabel(DSlabel)
     plt.xlabel(Rlabel)
-    plt.title("%s %s"%(zlabels[i], llabels[j]))
+    plt.text(2, 100, "%s\n%s"%(zlabels[i], llabels[j]))
     plt.subplots_adjust(bottom=0.17, left=0.2)
     plt.ylim(0.1, 1e3)
     plt.xlim(0.03, 50.)
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     for i in xrange(0, 3): #z bins
         if i < 2: continue
         for j in xrange(0, 7): #lambda bins
-            if j > 7: continue
+            if j < 3: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             #Read in everything
             z    = zs[i,j]
