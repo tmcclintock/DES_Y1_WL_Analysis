@@ -8,7 +8,8 @@ from get_all_data import *
 from models import *
 import os, sys
 import matplotlib.pyplot as plt
-plt.rc("text", usetex=True, fontsize=24)
+plt.rc("text", usetex=True)
+plt.rc("font", size=24)
 plt.rc("errorbar", capsize=3)
 
 DSlabel = r"$\Delta\Sigma\ [{\rm M_\odot/pc^2}]$"
@@ -41,16 +42,28 @@ def calc_DS_all(params, name, defaults, z, lam, extras):
     dsfull = A*(dsc*(1.-fmis) + fmis*dsm)/boost_model
     return [R, dsc, dsm, boost_model, dsfull]
 
+def fix_errorbars(ds, err):
+    """
+    Find locations where the errorbars are larger than the measurement.
+    Correct the lower part of the bar to be at 10^-2, which is below
+    the lower limit of the plot.
+    """
+    bad = err>ds
+    errout = np.vstack((err, err))
+    errout[0,bad] = ds[bad]-1e-2
+    return errout
+
 def plot_DS_in_bin(params, name, defaults, z, lam, R, ds, cov, extras, cuts, i,j):
     lo,hi = cuts
     good = (lo<R)*(R<hi)
     bad  = (lo>R)+(R>hi)
     dserr = np.sqrt(np.diag(cov))
+    dserr = fix_errorbars(ds, dserr)
     Rmodel, dsc, dsm, boost, dsfull = calc_DS_all(params,name,
                                                   defaults,z,lam,extras)
-    plt.errorbar(R[good], ds[good], dserr[good], c='k', marker='o', 
+    plt.errorbar(R[good], ds[good], dserr[:,good], c='k', marker='o', 
                  ls='', markersize=3, zorder=1)
-    plt.errorbar(R[bad], ds[bad], dserr[bad], c='k', marker='o', mfc='w', 
+    plt.errorbar(R[bad], ds[bad], dserr[:,bad], c='k', marker='o', mfc='w', 
                  markersize=3, ls='', zorder=1)
     plt.loglog(Rmodel, dsfull, c='r', zorder=0)
     plt.loglog(Rmodel, dsm, c='b', ls='--', zorder=-1)
