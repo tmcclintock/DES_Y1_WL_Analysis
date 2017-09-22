@@ -1,0 +1,1 @@
+In this directory we create the semi-analytic covariance matrices. The first step is to create Tom's part. This is the part that contains M-lambda scatter, M-c scatter, and miscentering effects.

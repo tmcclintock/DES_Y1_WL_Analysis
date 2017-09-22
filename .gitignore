@@ -1,7 +1,10 @@
 # text files that shouldn't go on github
-chains/*.txt
-bestfits/*.txt
-P_files/*.txt
+analysis_routines/chains
+analysis_routines/bestfits
+analysis_routines/P_files
+analysis_routines/figures
+SAC_routines/data_files
+SAC_routines/output_files
 
 # emacs back up files
 *~

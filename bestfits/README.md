@@ -1,1 +1,0 @@
-This directory contains the best fits, which will not be put on github.

@@ -1,1 +1,0 @@
-This directory contains the chains, which will not be put onto github.

@@ -1,1 +1,0 @@
-This directory contains the power spectra, both linear and nonlinear, that we need for the analysis. They are evaluated for our fiducial cosmology but since the redshifts aren't public yet the power spectrum files are also hidden.
