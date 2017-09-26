@@ -20,7 +20,7 @@ N_Radii = 1000
 
 cluster_file_path = "/home/tmcclintock/Desktop/des_wl_work/Y1_work/data_files/cluster_files/clusters_z%d_l%d.txt"
 for i in range(2, -1, -1): #z index 2, 1, 0
-    for j in range(5, 4, -1): #lambda index 6 to 3, not doing 2,1,0
+    for j in range(3, 2, -1): #lambda index 6 to 3, not doing 2,1,0
         #Start by getting xi_mm, which doesn't depend on mass
         k = np.loadtxt("./data_files/k.txt")
         Plin = np.genfromtxt("./data_files/plin_z%d_l%d.txt"%(i,j))
