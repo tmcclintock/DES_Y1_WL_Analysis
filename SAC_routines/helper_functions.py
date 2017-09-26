@@ -11,6 +11,15 @@ default_cos = {'flat':True,'H0':70.0,'Om0':0.3,'Ob0':0.05,'sigma8':0.8,'ns':0.96
 cosmology.addCosmology('fiducial', default_cos)
 cosmology.setCosmology('fiducial')
 
+def get_all_zlenses():
+    cluster_file_path = "/home/tmcclintock/Desktop/des_wl_work/Y1_work/data_files/cluster_files/clusters_z%d_l%d.txt"
+    zlens = np.zeros((3, 7))
+    for i in xrange(2,-1,-1):
+        for j in xrange(6,-1,-1):
+            zs, lams = np.loadtxt(cluster_file_path%(i, j)).T
+            zlens[i,j] = np.mean(zs)
+    return zlens
+
 def get_concentration_spline():
     Nm, Nz = 20, 20
     M = np.logspace(12,17,Nm,base=10)
