@@ -15,7 +15,7 @@ def make_random_variables():
     if os.path.isfile(outpath):
         return
     else:
-        B0 = np.random.randn()*0.05 + 1.
+        B0 = np.fabs(np.random.randn()*0.15 + 1.)
         alpha = np.random.randn()*0.2
         outarr = np.array([B0, alpha])
         pickle.dump(outarr, open(outpath, "wb"))

@@ -35,36 +35,22 @@ def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, alldata=False):
         cov = cov[:,indices]
     return R, ds, np.linalg.inv(cov), cov
 
-def get_boost_data_and_cov(zi, lj, zs, lams, highcuts, lowcut=0.2):
+def get_boost_data_and_cov(zi, lj, highcut, lowcut=0.2):
     boostpath = boostbase%(zi, lj)
     bcovpath  = boostcovbase%(zi, lj)
+    Rb, Bp1, Be = np.genfromtxt(boostpath%(lj, zi), unpack=True)
+    Bp1 = Bp1[Be > 1e-3]
+    Rb  = Rb[Be > 1e-3]
+    Be  = Be[Be > 1e-3]
+    indices = (Rb > lowcut)*(Rb < highcut)
+    Bp1 = Bp1[indices]
+    Rb  = Rb[indices]
+    Be  = Be[indices]
     #Radii, 1+B, B error
     #Note: high cuts are Rlams*1.5 where Rlams are now in Mpc physical
     #Note: the boost factors don't have the same number of radial bins
     #as deltasigma. This doesn't matter, because all we do is
     #de-boost the model, which fits to the boost factors independently.
-    Bp1 = []
-    Be  = []
-    Rb  = []
-    for i in range(len(zs)):
-        Bp1i  = []
-        Bei = []
-        Rbi    = []
-        for j in xrange(0,len(zs[i])):
-            Rbij, Bp1ij, Beij = np.genfromtxt(boostpath%(j, i), unpack=True)
-            Bp1ij = Bp1ij[Beij > 1e-3]
-            Rbij  = Rbij[Beij > 1e-3]
-            Beij  = Beij[Beij > 1e-3]
-            indices = (Rbij > lowcut)*(Rbij < highcuts[i,j])
-            Bp1ij = Bp1ij[indices]
-            Rbij  = Rbij[indices]
-            Beij  = Beij[indices]
-            Bp1i.append(Bp1ij)
-            Bei.append(Beij)
-            Rbi.append(Rbij)
-        Bp1.append(Bp1i)
-        Be.append(Bei)
-        Rb.append(Rbi)
     return Rb, Bp1, Be   
 
 def get_default_ds_params(z, h):

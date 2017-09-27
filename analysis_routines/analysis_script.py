@@ -15,7 +15,7 @@ in this repository yet.
 """
 import numpy as np
 from likelihood_functions import *
-from get_all_data import *
+from helper_functions import *
 import figure_routines
 import sys
 
@@ -71,66 +71,44 @@ def do_mcmc():
     return 0
 
 if __name__ == '__main__':
-    #This specifies which analysis we are doing
-    #Name options are full, fixed, boostfixed or Afixed
-    name = "boostfixed" 
-    bstatus  = "blinded" #blinded or unblinded
-
-    #These are the basic paths to the data
-    #They are completed when the redshift/richness bin is specified
-    #as well as the blinding status
-    base  = "/home/tmcclintock/Desktop/des_wl_work/Y1_work/data_files/"
-    base2 = base+"%s_tamas_files/"%bstatus
-    database     = base2+"full-mcal-raw_y1subtr_l%d_z%d_profile.dat"
-    covbase      = base2+"full-mcal-raw_y1subtr_l%d_z%d_dst_cov.dat"
-    boostbase    = base2+"full-mcal-raw_y1clust_l%d_z%d_pz_boost.dat"
-    boostcovbase = "alsothis" #DOESN'T EXIST YET
-    kpath        = "P_files/k.txt"
-    Plinpath     = "P_files/plin_z%d_l%d.txt"
-    Pnlpath      = "P_files/pnl_z%d_l%d.txt"
-    
-    #Output suffix to be appended on things
-    basesuffix = bstatus+"_"+name+"_z%d_l%d"
-    
-    #Read in the redshifts and richnesses
-    zs    = np.genfromtxt(base+"Y1_meanz.txt")
-    lams  = np.genfromtxt(base+"Y1_meanl.txt")
+    zs, lams = get_zs_and_lams()
     Rlams = (lams/100.0)**0.2 #Mpc/h; richness radius
 
+    #This specifies which analysis we are doing
+    #Name options are full, fixed, boostfixed or Afixed
+    name = "fixed" 
+    bstatus  = "blinded" #blinded or unblinded
+    basesuffix = bstatus+"_"+name+"_z%d_l%d"    
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
     chainbase   = "chains/chain_%s.txt"%basesuffix
 
+    
+
     #Loop over bins
-    for i in xrange(0, 3): #z bins
+    for i in xrange(2, -1, -1): #z bins
         if i < 2: continue
-        for j in xrange(0, 7): #lambda bins
-            if j > 7: continue
+        for j in xrange(6, 5, -1): #lambda bins
+            if j < 6: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             #Read in everything
             z    = zs[i,j]
             lam  = lams[i,j]
             Rlam = Rlams[i,j]
-            suffix = basesuffix%(i,j)
-            datapath     = database%(j,i)
-            covpath      = covbase%(j,i)
-            boostpath    = boostbase
-            boostcovpath = boostcovbase%()
-            bestfitpath  = bestfitbase%(i,j)
-            chainpath    = chainbase%(i,j)
+            k, Plin, Pnl = get_power_sepctra(i, j)
+            #Calculate xi_mm here...
             #Note: convert Rlam to Mpc physical when we get the data for the cuts
-            R, ds, icov, cov = get_data_and_icov(datapath, covpath)
-            Rb, Bp1, Be = get_boost_data_and_cov(boostpath, boostcovpath, zs, lams, Rlams*1.5/h/(1+zs))
-            k    = np.genfromtxt(kpath)
-            Plin = np.genfromtxt(Plinpath%(i,j))
-            Pnl  = np.genfromtxt(Pnlpath%(i,j))
-            ds_params = get_default_ds_params(z, h)
+            Rdata, ds, icov, cov = get_data_and_icov(i, j)
+            Rb, Bp1, Be = get_boost_data_and_cov(boostpath, boostcovpath, Rlam*1.5/h/(1+z))
+            #ds_params = get_default_ds_params(z, h) # NOT NEEDED ANYMORE
+
+            bfpath    = bestfitbase %(i,j)
+            chainpath = chainbase%(i,j)
 
             #Group everything up for convenience
-            ds_args = (R, ds, icov, ds_params)
-            boost_args = (Rb, Bp1, Be)
-            P_args = (k, Plin, Pnl)
             cuts = (0.2, 999) #Radial cuts, Mpc physical
-            bf_args = (ds_args, boost_args, P_args, cuts, z, lam, Rlam, zs, lams, cosmo)
+            args = (z, lam, Rdata, ds, icov, Rb, Bp1, Be, cuts, cosmo, k, Plin, Pnl)#xi_mm
+            
+            #bf_args = (ds_args, boost_args, P_args, cuts, z, lam, Rlam, zs, lams, cosmo)
 
             #Flow control for whatever you want to do
-            find_best_fit(bf_args, name, bestfitpath)
+            #find_best_fit(bf_args, name, bestfitpath)
