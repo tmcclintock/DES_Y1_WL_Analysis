@@ -1,4 +1,5 @@
 # text files that shouldn't go on github
+analysis_routines/*.p
 analysis_routines/chains
 analysis_routines/bestfits
 analysis_routines/P_files

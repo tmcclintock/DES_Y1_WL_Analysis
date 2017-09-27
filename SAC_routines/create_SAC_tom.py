@@ -20,7 +20,7 @@ N_Radii = 1000
 
 cluster_file_path = "/home/tmcclintock/Desktop/des_wl_work/Y1_work/data_files/cluster_files/clusters_z%d_l%d.txt"
 for i in range(2, -1, -1): #z index 2, 1, 0
-    for j in range(3, 2, -1): #lambda index 6 to 3, not doing 2,1,0
+    for j in range(2, 1, -1): #lambda index 6 to 3, not doing 2,1,0
         #Start by getting xi_mm, which doesn't depend on mass
         k = np.loadtxt("./data_files/k.txt")
         Plin = np.genfromtxt("./data_files/plin_z%d_l%d.txt"%(i,j))
@@ -32,6 +32,7 @@ for i in range(2, -1, -1): #z index 2, 1, 0
         R_perp = np.logspace(-2, 2.4, N_Radii, base=10)
 
         DeltaSigma_realizations = np.zeros((N_realizations, N_Radii))
+        print "Starting realizations for z%d l%d"
         for real in range(N_realizations):
             M, conc, Rmis, ismis = HF.get_cluster_parameters(lams, zs, concentration_spline)
             N_kept = len(M)
@@ -52,4 +53,5 @@ for i in range(2, -1, -1): #z index 2, 1, 0
                     clusterwl.miscentering.calc_DeltaSigma_mis_at_R(R_perp, R_perp, Sigma_single, DeltaSigma)
                 mean_DeltaSigma += DeltaSigma/N_kept
             DeltaSigma_realizations[real] += mean_DeltaSigma
+        print "Made realizations for z%d l%d"
         np.savetxt("output_files/stack_realizations_z%d_l%d.txt"%(i, j), DeltaSigma_realizations)
