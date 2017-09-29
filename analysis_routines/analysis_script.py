@@ -16,7 +16,6 @@ in this repository yet.
 import numpy as np
 from likelihood_functions import *
 from helper_functions import *
-#import figure_routines #Worry about this later
 import sys
 import clusterwl #Used to get xi_mm(R) from P(k)
 
@@ -27,19 +26,15 @@ h = cosmo['h'] #Hubble constant
 model_name = "full" #Mfree, Afixed, cfixed
 
 def find_best_fit(bf_args, bestfitpath):
-    #Take out all of the arguments
-    z, lam, Rlam, Rdata, ds, icov, Rb, Bp1, iBcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, R_edges, indices, model_name = bf_args
-    #Switch between which model we are working with
+    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, indices, model_name = bf_args
     guess = get_model_start(model_name, lam, cosmo['h'])
-    #Perform a max-likelihood analysis to find the best parameters to start the MCMC
     import scipy.optimize as op
     nll = lambda *args: -lnprob(*args)
-    result = op.minimize(nll, guess, args=(bf_args,), tol=1e-1)
+    result = op.minimize(nll, guess, args=(bf_args,), tol=1e-2)
     print "Best fit being saved at :\n%s"%bestfitpath
     print result
     print "\tresults: ",result['x']
     print "\tsuccess = %s"%result['success']
-    #print result
     np.savetxt(bestfitpath, result['x'])
     return 
 
@@ -53,8 +48,8 @@ if __name__ == '__main__':
 
     #This specifies which analysis we are doing
     #Name options are full, fixed, boostfixed or Afixed
-    name = "fixed" 
-    bstatus  = "blinded" #blinded or unblinded
+    name = "sv" 
+    bstatus  = "unblinded" #blinded or unblinded
     basesuffix = bstatus+"_"+name+"_z%d_l%d"    
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
     chainbase   = "chains/chain_%s.txt"%basesuffix
@@ -83,7 +78,7 @@ if __name__ == '__main__':
             #Note: convert Rlam to Mpc physical when we specificy the cuts
             Rdata, ds, icov, cov = get_data_and_icov(i, j)
 
-            Rb, Bp1, iBcov = get_boost_data_and_cov(i, j, highcut=Rlam*1.5/h/(1+z))
+            Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, highcut=Rlam*1.5/h/(1+z))
             bfpath    = bestfitbase%(i,j)
             chainpath = chainbase%(i,j)
 
@@ -93,9 +88,7 @@ if __name__ == '__main__':
             Rmeans = 2./3. * (Redges[1:]**3 - Redges[:-1]**3)/(Redges[1:]**2 - Redges[:-1]**2) #Mpc physical
             Redges *= h*(1+z) #Mpc/h comoving
             indices = (Rmeans > cuts[0])*(Rmeans < cuts[1])
-            
-
-            args = (z, lam, Rlam, Rdata, ds, icov, Rb, Bp1, iBcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, indices, model_name)
+            args = (z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, indices, model_name)
 
             #Flow control for whatever you want to do
             find_best_fit(args, bfpath)

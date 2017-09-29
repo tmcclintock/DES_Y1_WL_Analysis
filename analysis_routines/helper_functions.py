@@ -84,9 +84,8 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999):
         Bp1 = Bp1[indices]
         Rb  = Rb[indices]
         Be  = Be[indices]
-        Boostcov = np.diag(Be**2)
-        iBcov = np.linalg.inv(Boostcov)
-        return Rb, Bp1, iBcov
+        Bcov = np.diag(Be**2)
+        return Rb, Bp1, np.linalg.inv(Bcov), Bcov
 
 def get_default_ds_params(z, h):
     #DeltaSigma module parameters
@@ -109,9 +108,9 @@ def get_model_defaults(h):
                 'tau' : 0.153, #Y1
                 'fmis' : 0.32, #Y1
                 'Am'    : 1.02, #SV result still...
-                'B0'   : -0.14, #Y1
+                'B0'   : 0.14, #Y1
                 'Rs'   : 2.49,  #Y1; Mpc physical
-                'sig_b': 0.005}#Y1
+                'sig_b': 0.005} #Y1 boost scatter
     return defaults
 
 def get_model_start(model_name, lam, h):
@@ -125,8 +124,7 @@ def get_model_start(model_name, lam, h):
                  defaults['fmis'], 
                  defaults['Am'],
                  defaults['B0'],
-                 defaults['Rs'],
-                 defaults['sig_b']]
+                 defaults['Rs']]
     return guess
 
 def get_cosmo_default():
