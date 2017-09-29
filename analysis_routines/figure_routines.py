@@ -4,7 +4,7 @@ either used to diagnose the analysis so far or to make final
 figures for the paper.
 """
 import numpy as np
-from get_all_data import *
+from helper_functions import *
 from models import *
 import os, sys
 import matplotlib.pyplot as plt
@@ -26,21 +26,17 @@ defaults = get_model_defaults(h)
 
 #Calculate all parts of the delta sigma model
 #Output units are all Msun/pc^2 and Mpc physical
-def calc_DS_all(params, name, defaults, z, lam, extras):
-    ds_params, k, Plin, Pnl, cosmo = extras
-    results = get_delta_sigma(params, name, ds_params, k, Plin, Pnl, cosmo, defaults)
-    lM, c, Rmis, fmis, A, B0, Cl, Dz, ER = model_swap(params, name, defaults)
-    result = get_delta_sigma(params, name, ds_params, k, Plin, Pnl, 
-                             cosmo, defaults)
+def calc_DS_all(params, bf_args):
+    lM, c, tau, fmis, Am, B0, Rs, sigb = model_swap(params, model_name)
+    z, lam, Rlam, Rdata, ds, icov, Rb, Bp1, iBcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, R_edges, indices, model_name = bf_args
+
+    Rp, full_DeltaSigma, ave_DeltaSigma, full_boost_model = get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, model_name)
 
     #Convert to Mpc physical
-    R = result['R']/(h*(1+z))
+    Rp /= (h*(1+z))
     #Convert to Msun/pc^2 physical
-    dsc = result['delta_sigma']*h*(1+z)**2 
-    dsm = result['miscentered_delta_sigma']*h*(1+z)**2
-    boost_model = get_boost_model(params, lam, z, R, name, defaults) 
-    dsfull = A*(dsc*(1.-fmis) + fmis*dsm)/boost_model
-    return [R, dsc, dsm, boost_model, dsfull]
+    full_DeltaSigma *= h*(1+z)**2
+    return Rp, full_DeltaSigma
 
 def fix_errorbars(ds, err):
     """
@@ -78,55 +74,7 @@ def plot_DS_in_bin(params, name, defaults, z, lam, R, ds, cov, extras, cuts, i,j
     plt.show()
 
 if __name__ == '__main__':
-    #This specifies which analysis we are doing
-    #Name options are full, fixed or Afixed
-    name = "boostfixed" 
-    bstatus  = "blinded" #blinded or unblinded
+    print "working..."
 
-    #These are the basic paths to the data
-    #They are completed when the redshift/richness bin is specified
-    #as well as the blinding status
-    base  = "/home/tmcclintock/Desktop/des_wl_work/Y1_work/data_files/"
-    base2 = base+"%s_tamas_files/"%bstatus
-    database     = base2+"full-mcal-raw_y1subtr_l%d_z%d_profile.dat"
-    covbase      = base2+"full-mcal-raw_y1subtr_l%d_z%d_dst_cov.dat"
-    boostbase    = base2+"full-mcal-raw_y1clust_l%d_z%d_pz_boost.dat"
-    boostcovbase = "alsothis" #DOESN'T EXIST YET
-    kpath        = "P_files/k.txt"
-    Plinpath     = "P_files/plin_z%d_l%d.txt"
-    Pnlpath      = "P_files/pnl_z%d_l%d.txt"
-    
-    #Output suffix to be appended on things
-    basesuffix = bstatus+"_"+name+"_z%d_l%d"
-    
-    #Read in the redshifts and richnesses
-    zs    = np.genfromtxt(base+"Y1_meanz.txt")
-    lams  = np.genfromtxt(base+"Y1_meanl.txt")
-    Rlams = 1.0*(lams/100.0)**0.2 #Mpc/h; richness radius
 
-    bestfitbase = "bestfits/bf_%s.txt"%basesuffix
-    chainbase   = "chains/chain_%s.txt"%basesuffix
-
-    for i in xrange(0, 3): #z bins
-        if i < 2: continue
-        for j in xrange(0, 7): #lambda bins
-            if j < 3: continue
-            print "Working at z%d l%d for %s"%(i,j,name)
-            #Read in everything
-            z    = zs[i,j]
-            lam  = lams[i,j]
-            Rlam = Rlams[i,j]
-            datapath     = database%(j,i)
-            covpath      = covbase%(j,i)
-            bestfitpath  = bestfitbase%(i,j)
-            R, ds, icov, cov = get_data_and_icov(datapath, covpath, alldata=True)
-            k    = np.genfromtxt(kpath)
-            Plin = np.genfromtxt(Plinpath%(i,j))
-            Pnl  = np.genfromtxt(Pnlpath%(i,j))
-            ds_params = get_default_ds_params(z, h)
-            cuts = (0.2, 999) #Radial cuts, Mpc physical
-            extras = [ds_params, k, Plin, Pnl, cosmo]
-
-            #Find the best fit model
-            params = np.loadtxt(bestfitpath)
-            plot_DS_in_bin(params, name, defaults, z, lam, R, ds, cov, extras, cuts, i, j)
+    #plot_DS_in_bin(params, name, defaults, z, lam, R, ds, cov, extras, cuts, i, j)

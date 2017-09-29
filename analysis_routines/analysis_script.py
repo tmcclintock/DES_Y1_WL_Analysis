@@ -16,54 +16,31 @@ in this repository yet.
 import numpy as np
 from likelihood_functions import *
 from helper_functions import *
-import figure_routines
+#import figure_routines #Worry about this later
 import sys
+import clusterwl #Used to get xi_mm(R) from P(k)
 
 #Set up the assumptions
 cosmo = get_cosmo_default()
 h = cosmo['h'] #Hubble constant
-defaults = get_model_defaults(cosmo['h'])
 
-def find_best_fit(bf_args, name, bestfitpath):
+model_name = "full" #Mfree, Afixed, cfixed
+
+def find_best_fit(bf_args, bestfitpath):
     #Take out all of the arguments
-    ds_args, boost_args, P_args, cuts, z, lam, Rlam, zs, lams, cosmo = bf_args
-    R, ds, icov, ds_params = ds_args
-    Rb, Bp1, Be = boost_args
-    k, Plin, Pnl = P_args
+    z, lam, Rlam, Rdata, ds, icov, Rb, Bp1, iBcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, R_edges, indices, model_name = bf_args
     #Switch between which model we are working with
-    if name is "full":
-        guess = [defaults['lM']+np.log(lam/30.)*1.12/np.log(10), 
-                 defaults['c'],
-                 Rlam*np.exp(defaults['Rmis']),
-                 defaults['fmis'], defaults['A'], defaults['B0'],
-                 defaults['Cl'], defaults['Dz'], defaults['ER']]
-    elif name is 'fixed':
-        guess = [defaults['lM']+np.log(lam/30.)*1.12/np.log(10), 
-                 defaults['c']]
-        defaults['Rmis'] = Rlam*np.exp(defaults['Rmis'])
-    elif name is "boostfixed":
-        guess = [defaults['lM']+np.log(lam/30.)*1.12/np.log(10), 
-                 defaults['c'],
-                 Rlam*np.exp(defaults['Rmis']),
-                 defaults['fmis'], defaults['A']]
-    else: #'Afixed'
-        guess = [defaults['lM']+np.log(lam/30.)*1.12/np.log(10), 
-                 defaults['c'], 
-                 Rlam*np.exp(defaults['Rmis']),
-                 defaults['fmis'], defaults['B0'],
-                 defaults['Cl'], defaults['Dz'], defaults['ER']]
+    guess = get_model_start(model_name, lam, cosmo['h'])
     #Perform a max-likelihood analysis to find the best parameters to start the MCMC
     import scipy.optimize as op
-    lnprob_args = (name, ds, icov, Rb, Bp1, Be, z, lam, Rlam, 
-                   zs, lams, defaults, cuts, (ds_params, k, Plin, Pnl, cosmo))
     nll = lambda *args: -lnprob(*args)
-    result = op.minimize(nll, guess, args=lnprob_args, tol=1e-1)
+    result = op.minimize(nll, guess, args=(bf_args,), tol=1e-1)
     print "Best fit being saved at :\n%s"%bestfitpath
+    print result
     print "\tresults: ",result['x']
     print "\tsuccess = %s"%result['success']
     #print result
     np.savetxt(bestfitpath, result['x'])
-    defaults['Rmis'] = -1.12631563312 #Reset this value
     return 
 
 def do_mcmc():
@@ -82,33 +59,43 @@ if __name__ == '__main__':
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
     chainbase   = "chains/chain_%s.txt"%basesuffix
 
-    
+    #The bin edges in Mpc physical
+    Nbins = 15
+    Redges = np.logspace(np.log(0.0323), np.log(30.), num=Nbins+1, base=np.e)
 
+    import matplotlib.pyplot as plt
     #Loop over bins
     for i in xrange(2, -1, -1): #z bins
-        if i < 2: continue
-        for j in xrange(6, 5, -1): #lambda bins
-            if j < 6: continue
+        if i > 0: continue
+        for j in xrange(6, -1, -1): #lambda bins
+            if j > 3 or j < 3: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             #Read in everything
             z    = zs[i,j]
             lam  = lams[i,j]
             Rlam = Rlams[i,j]
-            k, Plin, Pnl = get_power_sepctra(i, j)
-            #Calculate xi_mm here...
-            #Note: convert Rlam to Mpc physical when we get the data for the cuts
-            Rdata, ds, icov, cov = get_data_and_icov(i, j)
-            Rb, Bp1, Be = get_boost_data_and_cov(boostpath, boostcovpath, Rlam*1.5/h/(1+z))
-            #ds_params = get_default_ds_params(z, h) # NOT NEEDED ANYMORE
+            k, Plin, Pnl = get_power_spectra(i, j)
 
-            bfpath    = bestfitbase %(i,j)
+            Rmodel = np.logspace(-2, 3, num=1000, base=10) 
+            xi_mm = clusterwl.xi.xi_mm_at_R(Rmodel, k, Pnl)
+            #Xi_mm MUST be evaluated to higher than BAO for correct accuracy
+
+            #Note: convert Rlam to Mpc physical when we specificy the cuts
+            Rdata, ds, icov, cov = get_data_and_icov(i, j)
+
+            Rb, Bp1, iBcov = get_boost_data_and_cov(i, j, highcut=Rlam*1.5/h/(1+z))
+            bfpath    = bestfitbase%(i,j)
             chainpath = chainbase%(i,j)
 
             #Group everything up for convenience
-            cuts = (0.2, 999) #Radial cuts, Mpc physical
-            args = (z, lam, Rdata, ds, icov, Rb, Bp1, Be, cuts, cosmo, k, Plin, Pnl)#xi_mm
+            cuts = (0.2, 21.5) #Radial cuts, Mpc physical, 20 just for SV
+            Redges = np.logspace(np.log10(0.02), np.log10(30.), num=Nbins+1)
+            Rmeans = 2./3. * (Redges[1:]**3 - Redges[:-1]**3)/(Redges[1:]**2 - Redges[:-1]**2) #Mpc physical
+            Redges *= h*(1+z) #Mpc/h comoving
+            indices = (Rmeans > cuts[0])*(Rmeans < cuts[1])
             
-            #bf_args = (ds_args, boost_args, P_args, cuts, z, lam, Rlam, zs, lams, cosmo)
+
+            args = (z, lam, Rlam, Rdata, ds, icov, Rb, Bp1, iBcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, indices, model_name)
 
             #Flow control for whatever you want to do
-            #find_best_fit(bf_args, name, bestfitpath)
+            find_best_fit(args, bfpath)
