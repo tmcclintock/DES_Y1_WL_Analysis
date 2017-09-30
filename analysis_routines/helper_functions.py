@@ -108,7 +108,7 @@ def get_model_defaults(h):
                 'tau' : 0.153, #Y1
                 'fmis' : 0.32, #Y1
                 'Am'    : 1.02, #SV result still...
-                'B0'   : 0.14, #Y1
+                'B0'   : 0.07, #Y1
                 'Rs'   : 2.49,  #Y1; Mpc physical
                 'sig_b': 0.005} #Y1 boost scatter
     return defaults
@@ -125,6 +125,8 @@ def get_model_start(model_name, lam, h):
                  defaults['Am'],
                  defaults['B0'],
                  defaults['Rs']]
+    elif model_name is "Mfree":
+        guess = [lM_guess]
     return guess
 
 def get_cosmo_default():

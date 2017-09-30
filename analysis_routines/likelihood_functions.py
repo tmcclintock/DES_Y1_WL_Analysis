@@ -31,6 +31,7 @@ def lnlike(params, args):
     LLDS = 0
     Rp, full_DeltaSigma, ave_DeltaSigma, full_boost_model = get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, model_name)
     ds_model = ave_DeltaSigma[indices]
+    ds_model *= h*(1+z)**2 #physical
     X = ds - ds_model
     LLDS = -0.5*np.dot(X, np.dot(icov, X))
 

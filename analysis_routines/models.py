@@ -14,6 +14,8 @@ def model_swap(params, name):
     c, tau, fmis, Am, B0, Rs, sigb = [defaults['conc'], defaults['tau'], defaults['fmis'], defaults['Am'], defaults['B0'], defaults['Rs'], defaults['sig_b']]
     if name is "full":
         lM, c, tau, fmis, Am, B0, Rs = params
+    if name is "Mfree":
+        lM = params
     return [lM, c, tau, fmis, Am, B0, Rs, sigb]
 
 #Boost factor model
@@ -63,10 +65,11 @@ def get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges,
     return Rp, full_profile, ave_profile, boost_model
 
 def get_delta_sigma_all_parts(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, model_name):
-    lM, c, tau, fmis, Am, B0, Rs, sigb = model_swap(params, model_name)
+    lM, c, tau, fmis, Am, B0, Rs, sigb = params
     om = cosmo['om']
     h = cosmo['h']
-    M = 0.87*10**lM
+    M = 10**lM
+    print "log10 M in Msun",np.log10(M/0.7)
     xi_nfw   = clusterwl.xi.xi_nfw_at_R(Rmodel, M, c, om)
     bias = clusterwl.bias.bias_at_M(M, k, Plin, om)
     xi_2halo = clusterwl.xi.xi_2halo(bias, xi_mm)

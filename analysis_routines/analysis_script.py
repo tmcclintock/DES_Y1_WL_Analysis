@@ -16,6 +16,7 @@ in this repository yet.
 import numpy as np
 from likelihood_functions import *
 from helper_functions import *
+import models
 import sys
 import clusterwl #Used to get xi_mm(R) from P(k)
 
@@ -35,7 +36,8 @@ def find_best_fit(bf_args, bestfitpath):
     print result
     print "\tresults: ",result['x']
     print "\tsuccess = %s"%result['success']
-    np.savetxt(bestfitpath, result['x'])
+    outmodel = models.model_swap(result['x'], model_name)
+    np.savetxt(bestfitpath, outmodel)
     return 
 
 def do_mcmc():
