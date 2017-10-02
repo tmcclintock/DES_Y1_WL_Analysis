@@ -12,7 +12,7 @@ cosmology.addCosmology('fiducial', default_cos)
 cosmology.setCosmology('fiducial')
 
 def get_all_zlenses():
-    cluster_file_path = "/home/tmcclintock/Desktop/des_wl_work/Y1_work/data_files/cluster_files/clusters_z%d_l%d.txt"
+    cluster_file_path = "/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/y1_data_files/cluster_files/clusters_z%d_l%d.txt"
     zlens = np.zeros((3, 7))
     for i in xrange(2,-1,-1):
         for j in xrange(6,-1,-1):
