@@ -1,12 +1,11 @@
 """
-Create the part of the SAC that has M-c scatter, M-lambda scatter, and miscentering.
+Make individual components of the SAC for one bin
 """
 import sys, os
 import numpy as np
 import helper_functions as HF
 import clusterwl
 import matplotlib.pyplot as plt
-#np.random.seed(1234567789)
 
 #Get concentration as a function of M and z 
 concentration_spline = HF.get_concentration_spline()
@@ -21,8 +20,8 @@ N_Radii = 1000
 
 P_file_path = "/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/y1_data_files/P_files/"
 cluster_file_path = "/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/y1_data_files/cluster_files/clusters_z%d_l%d.txt"
-for i in range(2, 1, -1): #z index 2, 1, 0
-    for j in range(6, 5, -1): #lambda index 6 to 3, not doing 2,1,0
+for i in range(2, -1, -1): #z index 2, 1, 0
+    for j in range(3,2, -1): #lambda index 6 to 3, not doing 2,1,0
         #Start by getting xi_mm, which doesn't depend on mass
         k = np.loadtxt(P_file_path+"k.txt")
         Plin = np.genfromtxt(P_file_path+"./plin_z%d_l%d.txt"%(i,j))
@@ -53,4 +52,4 @@ for i in range(2, 1, -1): #z index 2, 1, 0
                 mean_DeltaSigma += DeltaSigma/N_kept
             DeltaSigma_realizations[real] += mean_DeltaSigma
         print "Made realizations for z%d l%d"%(i,j)
-        #np.savetxt("output_files/stack_realizations_z%d_l%d.txt"%(i, j), DeltaSigma_realizations)
+        np.savetxt("output_files/stack_realizations_z%d_l%d.txt"%(i, j), DeltaSigma_realizations)

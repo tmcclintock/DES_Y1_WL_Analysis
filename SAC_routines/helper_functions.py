@@ -10,6 +10,7 @@ from colossus.cosmology import cosmology
 default_cos = {'flat':True,'H0':70.0,'Om0':0.3,'Ob0':0.05,'sigma8':0.8,'ns':0.96}
 cosmology.addCosmology('fiducial', default_cos)
 cosmology.setCosmology('fiducial')
+h = default_cos['H0']/100.
 
 def get_all_zlenses():
     cluster_file_path = "/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/y1_data_files/cluster_files/clusters_z%d_l%d.txt"
@@ -36,22 +37,21 @@ def get_cosmo_dict():
     cosmo["ode"]=1.0-cosmo["om"]
     return cosmo
 
-def get_cluster_parameters(lams, zs, c_spline, N_want=1000):
+def get_cluster_parameters(lams, zs, c_spline, N_want=1000, ML_scatter=0.25, MC_scatter=0.16, do_miscentering=True):
     N = len(lams)
     keep_inds = np.random.rand(N) < float(N_want)/N
     lams = lams[keep_inds]
     zs = zs[keep_inds]
     N = len(lams)
-    #Draw log10M pivots and scatters, pivot richness of 30.0
-    #Draw just from the SV M-lambda relation
-    lMp = np.random.randn(N)*np.sqrt(0.04**2+0.022**2) + 14.371
-    Fl = np.random.randn(N)*np.sqrt(0.20**2+0.06**2) + 1.12
-    Masses = 10**(lMp + Fl*np.log10(lams/30.0))
-    #Draw concentrations with some amount of scatter from DK15
+    #Masses by default have 25% scatter, units get changed to Msun/h
+    Mp = h*10**14.371
+    Masses = np.exp(np.log(Mp*(lams/30.0)**1.12) + ML_scatter*np.random.randn(N))
+    #Draw concentrations with some amount of scatter from DK15, with 16% scatter using base10
     cs = np.array([c_spline(mi,zi) for mi,zi in zip(Masses,zs)])[:,0]
-    conc = 10**(np.random.randn(N)*0.16 + np.log10(cs))
+    conc = 10**(np.random.randn(N)*MC_scatter + np.log10(cs))
     #Make draws for miscentering
     ismis = np.random.rand(N) < 0.32 #Y1 prior
+    if not do_miscentering: ismis *= False
     tau = np.random.randn(N)*0.003 +0.153
     Rlam = (lams/100)**0.2 #Mpc/h
     Rmis = tau*Rlam #Mpc/h
