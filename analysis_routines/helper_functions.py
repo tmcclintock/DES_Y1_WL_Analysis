@@ -30,6 +30,11 @@ def get_zs_and_lams():
     lams  = np.genfromtxt(lamspath)
     return zs, lams
 
+def get_lams(fory1):
+    if fory1: lampath="/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/y1_data_files/Y1_meanl.txt"
+    else: lampath="/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/sv_data_files/SV_meanl.txt"
+    return np.genfromtxt(lamspath)
+
 def get_power_spectra(zi, lj):
     k    = np.genfromtxt(base+"P_files/k.txt")
     Plin = np.genfromtxt(base+"P_files/plin_z%d_l%d.txt"%(zi, lj))
