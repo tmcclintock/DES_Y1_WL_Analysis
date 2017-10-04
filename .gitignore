@@ -7,6 +7,7 @@ analysis_routines/P_files
 analysis_routines/figures
 SAC_routines/data_files
 SAC_routines/output_files
+SAC_routines/component_outfiles
 
 # emacs back up files
 *~
