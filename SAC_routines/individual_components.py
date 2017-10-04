@@ -15,8 +15,10 @@ cosmo_dict = HF.get_cosmo_dict()
 h  = cosmo_dict['h']
 om = cosmo_dict['om']
 
-N_realizations = 1000
+N_realizations = 100
 N_Radii = 1000
+Rp = np.logspace(-2, 2.4, N_Radii, base=10)
+Nbins = 15
 
 P_file_path = "/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/y1_data_files/P_files/"
 cluster_file_path = "/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/y1_data_files/cluster_files/clusters_z%d_l%d.txt"
@@ -53,10 +55,13 @@ def component_realizations(zi, li, MLoff = False, MCoff = False, do_miscentering
                 DeltaSigma = clusterwl.miscentering.DeltaSigma_mis_at_R(R_perp, R_perp, Sigma_single)
             mean_DeltaSigma += DeltaSigma/N_kept
         DeltaSigma_realizations[real] += mean_DeltaSigma
-    print "Made realizations for z%d l%d"%(i,j)
+    print "Made individual realizations for z%d l%d"%(zi,lj)
     return DeltaSigma_realizations
 
 def merge_realizations(zi, lj, dss):
+    adss = np.zeros((N_realizations, Nbins))
+    amds  = np.zeros((Nbins))
+
     zlenses = HF.get_all_zlenses()
     zlens = zlenses[zi, lj]
     binmin = 0.0323*(1+zlens)*h #Converted to comoving Mpc/h
@@ -82,16 +87,16 @@ def merge_realizations(zi, lj, dss):
 if __name__ == "__main__":
     zi, lj = 0, 6
     DSreal_ml = component_realizations(zi, lj, MLoff = False, MCoff = True, do_miscentering = False)
-    np.savetxt("component_outfiles/MLonly_reals_z%d_l%d.txt", DSreal_ml)
+    np.savetxt("component_outfiles/MLonly_reals_z%d_l%d.txt"%(zi, lj), DSreal_ml)
     Cml = merge_realizations(zi, lj, DSreal_ml)
-    np.savetxt("component_outfiles/cov_MLonly_z%d_l%d.txt", Cml)
+    np.savetxt("component_outfiles/cov_MLonly_z%d_l%d.txt"%(zi,lj), Cml)
 
     DSreal_mc = component_realizations(zi, lj, MLoff = True, MCoff = False, do_miscentering = False)
-    np.savetxt("component_outfiles/MConly_reals_z%d_l%d.txt", DSreal_mc)
+    np.savetxt("component_outfiles/MConly_reals_z%d_l%d.txt"%(zi,lj), DSreal_mc)
     Cmc = merge_realizations(zi, lj, DSreal_mc)
-    np.savetxt("component_outfiles/cov_MConly_z%d_l%d.txt", Cmc)
+    np.savetxt("component_outfiles/cov_MConly_z%d_l%d.txt"%(zi,lj), Cmc)
 
     DSreal_mis = component_realizations(zi, lj, MLoff = False, MCoff = False, do_miscentering = True)
-    np.savetxt("component_outfiles/MISonly_reals_z%d_l%d.txt", DSreal_mis)
+    np.savetxt("component_outfiles/MISonly_reals_z%d_l%d.txt"%(zi,lj), DSreal_mis)
     Cmis = merge_realizations(zi, lj, DSreal_mis)
-    np.savetxt("component_outfiles/cov_MISonly_z%d_l%d.txt", Cmis)
+    np.savetxt("component_outfiles/cov_MISonly_z%d_l%d.txt"%(zi,lj), Cmis)
