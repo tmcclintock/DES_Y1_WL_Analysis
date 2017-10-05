@@ -18,8 +18,10 @@ ref = respl(x)
 
 ry1 = rspl(zy1)
 rey1 = respl(zy1)
-np.savetxt("Y1_deltap1.txt", ry1)
-np.savetxt("Y1_deltap1_var.txt", ry1**2)
+dp1 = 1./ry1
+dp1_err = rey1/ry1**2
+np.savetxt("Y1_deltap1.txt", dp1)
+np.savetxt("Y1_deltap1_var.txt", dp1_err**2)
 
 plt.errorbar(z, r, re)
 plt.plot(x, rf, c='k')

@@ -8,6 +8,9 @@ import helper_functions as HF
 import clusterwl
 defaults = HF.get_model_defaults(0.7)
 
+#R perpendicular
+Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h
+
 #Swap between whatever model type we are working with and return
 #the parameters, including their default values.
 def model_swap(params, name):
@@ -41,7 +44,6 @@ def get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges,
     bias = clusterwl.bias.bias_at_M(M, k, Plin, om)
     xi_2halo = clusterwl.xi.xi_2halo(bias, xi_mm)
     xi_hm    = clusterwl.xi.xi_hm(xi_nfw, xi_2halo)
-    Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h
     Sigma  = clusterwl.deltasigma.Sigma_at_R(Rp, Rmodel, xi_hm, M, c, om)
     DeltaSigma = clusterwl.deltasigma.DeltaSigma_at_R(Rp, Rp, Sigma, M, c, om)
     Rmis = tau*Rlam #Mpc/h
@@ -54,8 +56,8 @@ def get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges,
 
     full_profile *= Am #multiplicative bias
 
-    #Note: Rs is usually in Mpc physical
-    boost_model = get_boost_model(B0, Rs/(h*(1+z)), Rp)
+    #Note: Rs is default in Mpc physical
+    boost_model = get_boost_model(B0, Rs*(h*(1+z)), Rp)
     full_profile /= boost_model #de-boost the model
 
     #full_profile /= (1-kappa) #Needs Sigma_crit_inv...
@@ -69,12 +71,10 @@ def get_delta_sigma_all_parts(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_m
     om = cosmo['om']
     h = cosmo['h']
     M = 10**lM
-    print "log10 M in Msun",np.log10(M/0.7)
     xi_nfw   = clusterwl.xi.xi_nfw_at_R(Rmodel, M, c, om)
     bias = clusterwl.bias.bias_at_M(M, k, Plin, om)
     xi_2halo = clusterwl.xi.xi_2halo(bias, xi_mm)
     xi_hm    = clusterwl.xi.xi_hm(xi_nfw, xi_2halo)
-    Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h
     Sigma  = clusterwl.deltasigma.Sigma_at_R(Rp, Rmodel, xi_hm, M, c, om)
     DeltaSigma = clusterwl.deltasigma.DeltaSigma_at_R(Rp, Rp, Sigma, M, c, om)
     Rmis = tau*Rlam #Mpc/h
@@ -87,8 +87,8 @@ def get_delta_sigma_all_parts(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_m
 
     full_DeltaSigma *= Am #multiplicative bias
 
-    #Note: Rs is usually in Mpc physical
-    boost_model = get_boost_model(B0, Rs/(h*(1+z)), Rp)
+    #Note: Rs is default in Mpc physical
+    boost_model = get_boost_model(B0, Rs*(h*(1+z)), Rp)
     full_DeltaSigma /= boost_model #de-boost the model
 
     #full_DeltaSigma /= (1-kappa) #Needs Sigma_crit_inv...

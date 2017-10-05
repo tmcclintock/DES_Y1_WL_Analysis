@@ -24,7 +24,9 @@ amds  = np.zeros((Nbins))
 
 for i in xrange(2,-1,-1):
     for j in xrange(6,5,-1):
-        pz_cal = pz_cals[i, j]
+        pz_cal = pz_cals[i, j] #photoz calibration
+        m = 0.012 #shear calibration
+        Am = pz_cal + m # 1+m+delta
         zlens = zlenses[i,j]
         binmin = 0.0323*(1+zlens)*h #Converted to comoving Mpc/h
         binmax = 30.0*(1+zlens)*h #Converted to comoving Mpc/h
@@ -44,5 +46,5 @@ for i in xrange(2,-1,-1):
                 Di *= h*(1+zlens)**2 #Msun/pc physical
                 Dj *= h*(1+zlens)**2 #Msun/pc physical
                 C[ii,jj] = np.mean(Di*Dj)
-        np.savetxt("output_files/tom_covariance_z%d_l%d.txt"%(i,j), C*pz_cal**2)
+        np.savetxt("output_files/tom_covariance_z%d_l%d.txt"%(i,j), C*Am**2)
         print "done with z%d l%d"%(i,j)
