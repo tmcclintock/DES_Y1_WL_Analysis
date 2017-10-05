@@ -24,7 +24,7 @@ import clusterwl #Used to get xi_mm(R) from P(k)
 cosmo = get_cosmo_default()
 h = cosmo['h'] #Hubble constant
 
-model_name = "Mfree" #Mfree, Afixed, cfixed
+model_name = "Mc" #Mfree, Afixed, cfixed
 
 def find_best_fit(bf_args, bestfitpath):
     z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, model_name = bf_args
@@ -36,8 +36,10 @@ def find_best_fit(bf_args, bestfitpath):
     print result
     print "\tresults: ",result['x']
     print "\tsuccess = %s"%result['success']
+    lM = result['x'][0]
+    print "lM = %.3f"%(lM - np.log10(h))
     outmodel = models.model_swap(result['x'], model_name)
-    np.savetxt(bestfitpath, outmodel)
+    #np.savetxt(bestfitpath, outmodel)
     return 
 
 def do_mcmc():
@@ -83,7 +85,7 @@ if __name__ == '__main__':
             Am_prior, Am_prior_var = get_Am_prior(i, j)
 
             #Group everything up for convenience
-            Redges = get_Redges(usey1 = True)*h*(1+z) #Mpc/h comoving
+            Redges = get_Redges(usey1 = usey1)*h*(1+z) #Mpc/h comoving
             args = (z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, model_name)
 
             #Flow control for whatever you want to do

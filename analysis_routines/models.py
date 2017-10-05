@@ -17,6 +17,8 @@ def model_swap(params, name):
     c, tau, fmis, Am, B0, Rs, sigb = [defaults['conc'], defaults['tau'], defaults['fmis'], defaults['Am'], defaults['B0'], defaults['Rs'], defaults['sig_b']]
     if name is "full":
         lM, c, tau, fmis, Am, B0, Rs = params
+    if name is "Mc":
+        lM, c = params
     if name is "Mfree":
         lM = params
     return [lM, c, tau, fmis, Am, B0, Rs, sigb]

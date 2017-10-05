@@ -50,6 +50,7 @@ def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=F
         datapath = y1database%(lj, zi)
         covpath = y1covbase%(lj, zi)
     else:
+        print "SV data z%d l%d"%(zi, lj)
         datapath = svdatabase%(zi, lj)
         covpath = svcovbase%(zi, lj)
     R, ds, dse, dsx, dsxe = np.genfromtxt(datapath, unpack=True)
@@ -81,6 +82,7 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True):
         #NEED TO BE ABLE TO RETURN A COVARIANCE MATRIX
         return Rb, Bp1, Be
     else: #use_sv
+        print "SV boosts"
         boostpath = svboostbase
         bcovpath  = svboostcovbase%(zi, lj) #doesn't exist
         if zi == 0: highcut = 21.5 #1 degree cut
@@ -95,27 +97,13 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True):
         Bcov = np.diag(Be**2)
         return Rb, Bp1, np.linalg.inv(Bcov), Bcov
 
-def get_default_ds_params(z, h):
-    #DeltaSigma module parameters
-    ds_params = {'NR'        : 300,
-                 'Rmin'      : 0.01,
-                 'Rmax'      : 200.0,
-                 'Nbins'     : 15,
-                 'R_bin_min' : 0.0323*h*(1+z), #Mpc/h comoving
-                 'R_bin_max' : 30.0*h*(1+z), #Mpc/h comoving
-                 'delta'     : 200,
-                 'miscentering' : 1,
-                 'averaging'    : 1,
-                 'single_miscentering': 0}
-    return ds_params
-
 def get_model_defaults(h):
     #Dictionary of default starting points for the best fit
     defaults = {'lM'   : 14.37+np.log10(h), #Result of SV relation
-                'conc'    : 5.0, #Arbitrary
+                'conc'    : 4.5, #Arbitrary
                 'tau' : 0.153, #Y1
                 'fmis' : 0.32, #Y1
-                'Am'    : 1.02, #SV result still...
+                'Am'    : 1.02, #Y1 approx.
                 'B0'   : 0.07, #Y1
                 'Rs'   : 2.49,  #Y1; Mpc physical
                 'sig_b': 0.005} #Y1 boost scatter
@@ -133,6 +121,8 @@ def get_model_start(model_name, lam, h):
                  defaults['Am'],
                  defaults['B0'],
                  defaults['Rs']]
+    elif model_name is "Mc":
+        guess = [lM_guess, 4.5]
     elif model_name is "Mfree":
         guess = [lM_guess]
     return guess
