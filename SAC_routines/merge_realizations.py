@@ -12,6 +12,7 @@ cosmo_dict = HF.get_cosmo_dict()
 h  = cosmo_dict['h']
 
 zlenses = HF.get_all_zlenses()
+pz_cals = np.loadtxt("../photoz_calibration/Y1_deltap1.txt")
 
 N_realizations = 1000
 N_Radii = 1000
@@ -23,7 +24,7 @@ amds  = np.zeros((Nbins))
 
 for i in xrange(2,-1,-1):
     for j in xrange(6,5,-1):
-
+        pz_cal = pz_cals[i, j]
         zlens = zlenses[i,j]
         binmin = 0.0323*(1+zlens)*h #Converted to comoving Mpc/h
         binmax = 30.0*(1+zlens)*h #Converted to comoving Mpc/h
@@ -43,6 +44,5 @@ for i in xrange(2,-1,-1):
                 Di *= h*(1+zlens)**2 #Msun/pc physical
                 Dj *= h*(1+zlens)**2 #Msun/pc physical
                 C[ii,jj] = np.mean(Di*Dj)
-        np.savetxt("output_files/tom_covariance_z%d_l%d.txt"%(i,j), C)
-        err = np.sqrt(np.diag(C))
+        np.savetxt("output_files/tom_covariance_z%d_l%d.txt"%(i,j), C*pz_cal**2)
         print "done with z%d l%d"%(i,j)
