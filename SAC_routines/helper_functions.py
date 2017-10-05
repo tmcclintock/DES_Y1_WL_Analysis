@@ -45,10 +45,11 @@ def get_cluster_parameters(lams, zs, c_spline, N_want=1000, ML_scatter=0.25, MC_
     N = len(lams)
     #Masses by default have 25% scatter, units get changed to Msun/h
     Mp = h*10**14.371
-    Masses = np.exp(np.log(Mp*(lams/30.0)**1.12) + ML_scatter*np.random.randn(N))
+    Masses = np.exp(np.log(Mp*(lams/30.0)**1.12)-0.5*ML_scatter**2 + ML_scatter*np.random.randn(N))
     #Draw concentrations with some amount of scatter from DK15, with 16% scatter using base10
     cs = np.array([c_spline(mi,zi) for mi,zi in zip(Masses,zs)])[:,0]
-    conc = 10**(np.random.randn(N)*MC_scatter + np.log10(cs))
+    #Note: MC_scatter is actually in dex, not in scatter of a lognormal
+    conc = np.exp(np.random.randn(N)*MC_scatter*np.log(10) + np.log(cs)-0.5*(MC_scatter*np.log(10))**2)
     #Make draws for miscentering
     ismis = np.random.rand(N) < 0.32 #Y1 prior
     if not do_miscentering: ismis *= False

@@ -22,7 +22,7 @@ adss = np.zeros((N_realizations, Nbins))
 amds  = np.zeros((Nbins))
 
 for i in xrange(2,-1,-1):
-    for j in xrange(6,3,-1):
+    for j in xrange(6,5,-1):
 
         zlens = zlenses[i,j]
         binmin = 0.0323*(1+zlens)*h #Converted to comoving Mpc/h

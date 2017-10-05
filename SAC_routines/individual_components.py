@@ -15,7 +15,7 @@ cosmo_dict = HF.get_cosmo_dict()
 h  = cosmo_dict['h']
 om = cosmo_dict['om']
 
-N_realizations = 100
+N_realizations = 1000
 N_Radii = 1000
 Rp = np.logspace(-2, 2.4, N_Radii, base=10)
 Nbins = 15
@@ -27,7 +27,7 @@ def component_realizations(zi, li, MLoff = False, MCoff = False, do_miscentering
     if MLoff: ML_scatter = 0
     else: ML_scatter = 0.25 #percent
     if MCoff: MC_scatter = 0
-    else: MC_scatter = 0.16
+    else: MC_scatter = 0.16 #dex scatter
     k = np.loadtxt(P_file_path+"k.txt")
     Plin = np.genfromtxt(P_file_path+"./plin_z%d_l%d.txt"%(zi, lj))
     Pnl  = np.genfromtxt(P_file_path+"/pnl_z%d_l%d.txt"%(zi, lj))
@@ -86,17 +86,17 @@ def merge_realizations(zi, lj, dss):
 
 if __name__ == "__main__":
     zi, lj = 0, 6
-    DSreal_ml = component_realizations(zi, lj, MLoff = False, MCoff = True, do_miscentering = False)
-    np.savetxt("component_outfiles/MLonly_reals_z%d_l%d.txt"%(zi, lj), DSreal_ml)
-    Cml = merge_realizations(zi, lj, DSreal_ml)
-    np.savetxt("component_outfiles/cov_MLonly_z%d_l%d.txt"%(zi,lj), Cml)
+    #DSreal_ml = component_realizations(zi, lj, MLoff = False, MCoff = True, do_miscentering = False)
+    #np.savetxt("component_outfiles/MLonly_reals_z%d_l%d.txt"%(zi, lj), DSreal_ml)
+    #Cml = merge_realizations(zi, lj, DSreal_ml)
+    #np.savetxt("component_outfiles/cov_MLonly_z%d_l%d.txt"%(zi,lj), Cml)
 
-    DSreal_mc = component_realizations(zi, lj, MLoff = True, MCoff = False, do_miscentering = False)
-    np.savetxt("component_outfiles/MConly_reals_z%d_l%d.txt"%(zi,lj), DSreal_mc)
-    Cmc = merge_realizations(zi, lj, DSreal_mc)
-    np.savetxt("component_outfiles/cov_MConly_z%d_l%d.txt"%(zi,lj), Cmc)
+    #DSreal_mc = component_realizations(zi, lj, MLoff = True, MCoff = False, do_miscentering = False)
+    #np.savetxt("component_outfiles/MConly_reals_z%d_l%d.txt"%(zi,lj), DSreal_mc)
+    #Cmc = merge_realizations(zi, lj, DSreal_mc)
+    #np.savetxt("component_outfiles/cov_MConly_z%d_l%d.txt"%(zi,lj), Cmc)
 
-    DSreal_mis = component_realizations(zi, lj, MLoff = False, MCoff = False, do_miscentering = True)
-    np.savetxt("component_outfiles/MISonly_reals_z%d_l%d.txt"%(zi,lj), DSreal_mis)
+    DSreal_mis = component_realizations(zi, lj, MLoff = True, MCoff = True, do_miscentering = True)
+    np.savetxt("component_outfiles/actual_MISonly_reals_z%d_l%d.txt"%(zi,lj), DSreal_mis)
     Cmis = merge_realizations(zi, lj, DSreal_mis)
-    np.savetxt("component_outfiles/cov_MISonly_z%d_l%d.txt"%(zi,lj), Cmis)
+    np.savetxt("component_outfiles/actual_cov_MISonly_z%d_l%d.txt"%(zi,lj), Cmis)

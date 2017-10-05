@@ -1,0 +1,1 @@
+Tae computed the photo-z calibration of Sigma_inverse_crit from MOF. The routine ```do_interpolation.py``` finds the calibration at the redshifts of our lens samples.
