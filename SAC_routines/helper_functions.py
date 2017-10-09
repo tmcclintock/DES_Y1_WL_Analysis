@@ -38,6 +38,7 @@ def get_cosmo_dict():
     return cosmo
 
 def get_cluster_parameters(lams, zs, c_spline, N_want=1000, ML_scatter=0.25, MC_scatter=0.16, do_miscentering=True):
+    #print "ML precent scatter = ",ML_scatter
     N = len(lams)
     keep_inds = np.random.rand(N) < float(N_want)/N
     lams = lams[keep_inds]

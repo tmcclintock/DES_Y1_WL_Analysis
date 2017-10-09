@@ -16,13 +16,15 @@ cosmo_dict = HF.get_cosmo_dict()
 h  = cosmo_dict['h']
 om = cosmo_dict['om']
 
-N_realizations = 1000
+N_realizations = 400
 N_Radii = 1000
+
+ML_percent_scatter = 25
 
 P_file_path = "/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/y1_data_files/P_files/"
 cluster_file_path = "/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/y1_data_files/cluster_files/clusters_z%d_l%d.txt"
 for i in range(2, -1, -1): #z index 2, 1, 0
-    for j in range(4, 3, -1): #lambda index 6 to 3, not doing 2,1,0
+    for j in range(2, 1, -1): #lambda index 6 to 3, not doing 2,1,0
         #Start by getting xi_mm, which doesn't depend on mass
         k = np.loadtxt(P_file_path+"k.txt")
         Plin = np.genfromtxt(P_file_path+"./plin_z%d_l%d.txt"%(i,j))
@@ -36,7 +38,7 @@ for i in range(2, -1, -1): #z index 2, 1, 0
         DeltaSigma_realizations = np.zeros((N_realizations, N_Radii))
         print "Starting realizations for z%d l%d"%(i,j)
         for real in range(N_realizations):
-            M, conc, Rmis, ismis = HF.get_cluster_parameters(lams, zs, concentration_spline)
+            M, conc, Rmis, ismis = HF.get_cluster_parameters(lams, zs, concentration_spline, ML_scatter=ML_percent_scatter/100.)
             N_kept = len(M)
             mean_DeltaSigma = np.zeros_like(R_perp)
             for cl in range(N_kept): #Loop over clusters
@@ -53,4 +55,5 @@ for i in range(2, -1, -1): #z index 2, 1, 0
                 mean_DeltaSigma += DeltaSigma/N_kept
             DeltaSigma_realizations[real] += mean_DeltaSigma
         print "Made realizations for z%d l%d"%(i,j)
+        #np.savetxt("output_files/stack_realizations_MLps%d_z%d_l%d.txt"%(ML_percent_scatter, i, j), DeltaSigma_realizations)
         np.savetxt("output_files/stack_realizations_z%d_l%d.txt"%(i, j), DeltaSigma_realizations)
