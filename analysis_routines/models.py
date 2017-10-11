@@ -37,7 +37,7 @@ def boost_variance_model(sigma, R):
     return (sigma/R)**2 #R is in Mpc, pivot is 1 Mpc
 
 
-def get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, model_name):
+def get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv, model_name):
     lM, c, tau, fmis, Am, B0, Rs, sigb = model_swap(params, model_name)
     om = cosmo['om']
     h = cosmo['h']
@@ -61,14 +61,13 @@ def get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges,
     #Note: Rs is default in Mpc physical
     boost_model = get_boost_model(B0, Rs*(h*(1+z)), Rp)
     full_profile /= boost_model #de-boost the model
-
-    #full_profile /= (1-kappa) #Needs Sigma_crit_inv...
+    full_profile /= (1-full_Sigma*sigma_crit_inv) #Reduced shear
 
     ave_profile = np.zeros((len(Redges)-1))
     clusterwl.averaging.average_profile_in_bins(Redges, Rp, full_profile, ave_profile)
     return Rp, full_profile, ave_profile, boost_model
 
-def get_delta_sigma_all_parts(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, model_name):
+def get_delta_sigma_all_parts(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv, model_name):
     lM, c, tau, fmis, Am, B0, Rs, sigb = params
     om = cosmo['om']
     h = cosmo['h']
@@ -84,7 +83,6 @@ def get_delta_sigma_all_parts(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_m
     DeltaSigma_mis = clusterwl.miscentering.DeltaSigma_mis_at_R(Rp, Rp, Sigma_mis)
 
     full_Sigma = (1-fmis)*Sigma + fmis*Sigma_mis
-    #kappa = full_sigma/Sigma_crit_inv
     full_DeltaSigma = (1-fmis)*DeltaSigma + fmis*DeltaSigma_mis
 
     full_DeltaSigma *= Am #multiplicative bias
@@ -92,8 +90,7 @@ def get_delta_sigma_all_parts(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_m
     #Note: Rs is default in Mpc physical
     boost_model = get_boost_model(B0, Rs*(h*(1+z)), Rp)
     full_DeltaSigma /= boost_model #de-boost the model
-
-    #full_DeltaSigma /= (1-kappa) #Needs Sigma_crit_inv...
+    full_DeltaSigma /= (1-full_Sigma*sigma_crit_inv) #Reduced shear
 
     ave_DeltaSigma = np.zeros((len(Redges)-1))
     clusterwl.averaging.average_profile_in_bins(Redges, Rp, full_DeltaSigma, ave_DeltaSigma)

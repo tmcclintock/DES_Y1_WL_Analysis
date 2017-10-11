@@ -23,12 +23,12 @@ def lnprior(params, Am_prior, Am_prior_var, name):
 Log posterior of the DeltaSigma model
 """
 def lnlike(params, args):
-    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, indices, Am_prior, Am_prior_var, model_name = args
+    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, indices, Am_prior, Am_prior_var, sigma_crit_inv, model_name = args
     h = cosmo['h']
     lM, c, tau, fmis, Am, B0, Rs, sigb = model_swap(params, model_name)
 
     LLDS = 0
-    Rp, full_DeltaSigma, ave_DeltaSigma, full_boost_model = get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, model_name)
+    Rp, full_DeltaSigma, ave_DeltaSigma, full_boost_model = get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv, model_name)
     ds_model = ave_DeltaSigma[indices]
     ds_model *= h*(1+z)**2 #physical
     X = ds - ds_model
@@ -45,7 +45,7 @@ def lnlike(params, args):
 Log posterior probability
 """
 def lnprob(params, args):
-    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, indices, Am_prior, Am_prior_var, model_name = args
+    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, indices, Am_prior, Am_prior_var, sigma_crit_inv, model_name = args
     lpr = lnprior(params, Am_prior, Am_prior_var, model_name)
     if not np.isfinite(lpr): return -np.inf
     return lpr + lnlike(params, args)

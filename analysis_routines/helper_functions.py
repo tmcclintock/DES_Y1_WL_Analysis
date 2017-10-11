@@ -4,36 +4,48 @@ This file contains functions used to make the analysis script easier to read. Th
 import numpy as np
 
 #Y1 paths
-bstatus  = "blinded" #blinded or unblinded
-y1base = "/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/y1_data_files/"
-y1base2 = y1base+"%s_tamas_files/"%bstatus
-y1database     = y1base2+"full-mcal-raw_y1subtr_l%d_z%d_profile.dat"
-y1covbase      = y1base2+"full-mcal-raw_y1subtr_l%d_z%d_dst_cov.dat"
-y1boostbase    = y1base2+"full-mcal-raw_y1clust_l%d_z%d_pz_boost.dat"
-y1boostcovbase = "alsothis" #DOESN'T EXIST YET
+y1base = "/Users/tmcclintock/Data/DATA_FILES/y1_data_files/"
+blinded = False
+if blinded:
+    y1base2 = y1base+"blinded_tamas_files/"
+    y1database     = y1base2+"full-mcal-raw_y1subtr_l%d_z%d_profile.dat"
+    y1covbase      = y1base2+"full-mcal-raw_y1subtr_l%d_z%d_dst_cov.dat"
+else:
+    y1base2 = y1base+"FINAL_FILES/"
+    y1database     = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_profile.dat"
+    y1covbase      = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_dst_cov.dat"
+y1boostbase    = y1base+"FINAL_FILES/full-unblind-mcal-zmix_y1subtr_l%d_z%d_corr_boost.dat"
+y1boostcovbase = y1base+"FINAL_FILES/full-unblind-mcal-zmix_y1subtr_l%d_z%d_corr_boost_cov.dat"
+
 y1zspath   = y1base+"Y1_meanz.txt"
 y1lamspath = y1base+"Y1_meanl.txt"
 #SV paths
-svbase = "/home/tmcclintock/Desktop/des_wl_work/DATA_FILES/sv_data_files/"
+svbase = "/Users/tmcclintock/Data/DATA_FILES/sv_data_files/"
 svdatabase = svbase+"profile_z%d_l%d.dat"
 svcovbase  = svbase+"cov_t_z%d_l%d.dat"
 svboostbase = svbase+"SV_boost_factors.txt"
 svboostcovbase = "need_z%d_l%d"
 svzspath   = svbase+"SV_meanz.txt"
 svlamspath = svbase+"SV_meanl.txt"
+#Sigma crit inverse path
+SCIpath = "../photoz_calibration/sigma_crit_inv.txt"
 
 def get_zs_and_lams(usey1):
-    if usey1:
-        zs    = np.genfromtxt(y1zspath)
-        lams  = np.genfromtxt(y1lamspath)
-    else:
-        zs    = np.genfromtxt(svzspath)
-        lams  = np.genfromtxt(svlamspath)
+    lams = get_lams(usey1)
+    zs = get_zs(usey1)
     return zs, lams
 
 def get_lams(usey1):
     if usey1: return np.genfromtxt(y1lamspath)
     else: return np.genfromtxt(svlamspath)
+
+def get_zs(usey1):
+    if usey1: return np.genfromtxt(y1zspath)
+    else: return np.genfromtxt(svzspath)
+
+def get_sigma_crit_inverses(usey1):
+    if usey1: return np.loadtxt(SCIpath)
+    else: return np.zeros((3,5))
 
 def get_power_spectra(zi, lj, usey1):
     if usey1: base = y1base
@@ -68,7 +80,8 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True):
     if usey1:
         boostpath = y1boostbase%(lj, zi)
         bcovpath  = y1boostcovbase%(lj, zi)
-        Rb, Bp1, Be = np.genfromtxt(boostpath%(lj, zi), unpack=True)
+        Bcov = np.loadtxt(bcovpath)
+        Rb, Bp1, Be = np.genfromtxt(boostpath, unpack=True, skip_header=1)
         Bp1 = Bp1[Be > 1e-6]
         Rb  = Rb[Be > 1e-6]
         Be  = Be[Be > 1e-6]
@@ -76,11 +89,13 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True):
         Bp1 = Bp1[indices]
         Rb  = Rb[indices]
         Be  = Be[indices]
+        Bcov = Bcov[indices]
+        Bcov = Bcov[:,indices]
+        #Bcov = np.diag(Be**2)
         #Note: the boost factors don't have the same number of radial bins
         #as deltasigma. This doesn't matter, because all we do is
         #de-boost the model, which fits to the boost factors independently.
-        #NEED TO BE ABLE TO RETURN A COVARIANCE MATRIX
-        return Rb, Bp1, Be
+        return Rb, Bp1, np.linalg.inv(Bcov), Bcov
     else: #use_sv
         print "SV boosts"
         boostpath = svboostbase
@@ -96,6 +111,12 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True):
         Be  = Be[indices]
         Bcov = np.diag(Be**2)
         return Rb, Bp1, np.linalg.inv(Bcov), Bcov
+
+def get_cuts(zi, lj, usey1=True):
+    lo = 0.2 #Mpc physical
+    hi = 999.
+    if not usey1 and zi==0: hi = 21.5
+    return [lo, hi]
 
 def get_model_defaults(h):
     #Dictionary of default starting points for the best fit

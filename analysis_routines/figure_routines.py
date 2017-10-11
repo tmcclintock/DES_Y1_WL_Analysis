@@ -14,10 +14,14 @@ plt.rc("errorbar", capsize=3)
 
 DSlabel = r"$\Delta\Sigma\ [{\rm M_\odot/pc^2}]$"
 Rlabel  = r"$R\ [{\rm Mpc}]$"
-zlabels = [r"$z\in[0.2;0.35)$", r"$z\in[0.35;0.5)$", r"$z\in[0.5;0.65)$"]
-llabels = [r"$\lambda\in[5;10)$",r"$\lambda\in[10;14)$",r"$\lambda\in[14;20)$",
-           r"$\lambda\in[20;30)$",r"$\lambda\in[30;45)$",r"$\lambda\in[45;60)$",
-           r"$\lambda\in[60;\infty)$"]
+
+y1zlabels = [r"$z\in[0.2;0.35)$", r"$z\in[0.35;0.5)$", r"$z\in[0.5;0.65)$"]
+y1llabels = [r"$\lambda\in[5;10)$",r"$\lambda\in[10;14)$",r"$\lambda\in[14;20)$",
+             r"$\lambda\in[20;30)$",r"$\lambda\in[30;45)$",r"$\lambda\in[45;60)$",
+             r"$\lambda\in[60;\infty)$"]
+svzlabels = [r"$z\in[0.2,0.4)$",r"$z\in[0.4,0.6)$",r"$z\in[0.6,0.8)$"]
+svllabels = [r"$\lambda\in[5;10)$",r"$\lambda\in[10;14)$",r"$\lambda\in[14;20)$",
+             r"$\lambda\in[20;35)$",r"$\lambda\in[35;180)$"]
 
 #Set up the assumptions
 cosmo = get_cosmo_default()
@@ -28,19 +32,10 @@ model_name = "Mfree" #Mfree, Afixed, cfixed
 #Calculate all parts of the delta sigma model
 #Output units are all Msun/pc^2 and Mpc physical
 def calc_DS_model(params, args):
-    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, R_edges, indices, model_name = args
+    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, R_edges, sigma_crit_inv, model_name, usey1 = args
     lM, c, tau, fmis, Am, B0, Rs, sigb = params
 
-    Rp, Sigma, Sigma_mis, DeltaSigma, DeltaSigma_mis, full_DeltaSigma, ave_DeltaSigma, boost_model = get_delta_sigma_all_parts(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, model_name)
-
-    #Convert to Mpc physical
-    Rp /= (h*(1+z))
-    #Convert to Msun/pc^2 physical
-    full_DeltaSigma *= h*(1+z)**2
-    DeltaSigma *= h*(1+z)**2
-    DeltaSigma_mis *= h*(1+z)**2
-    ave_DeltaSigma *= h*(1+z)**2
-
+    Rp, Sigma, Sigma_mis, DeltaSigma, DeltaSigma_mis, full_DeltaSigma, ave_DeltaSigma, boost_model = get_delta_sigma_all_parts(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv, model_name)
     return Rp, full_DeltaSigma, DeltaSigma, DeltaSigma_mis, boost_model, ave_DeltaSigma
 
 def fix_errorbars(ds, err):
@@ -55,7 +50,7 @@ def fix_errorbars(ds, err):
     return errout
 
 def plot_DS_in_bin(params, args, i, j):
-    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, R_edges, indices, model_name = args
+    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, R_edges, sigma_crit_inv, model_name, usey1 = args
 
     h = cosmo['h']
     lo,hi = cuts
@@ -64,17 +59,13 @@ def plot_DS_in_bin(params, args, i, j):
     dserr = np.sqrt(np.diag(cov))
     dserr = fix_errorbars(ds, dserr)
     Rmodel, DSfull, DSc, DSm, boost, aDS = calc_DS_model(params, args)
-    #Swap units and such
+    #Convert to Mpc physical
     Rmodel /= (h*(1+z))
     DSfull *= (h*(1+z)**2)
     DSc *= (h*(1+z)**2)
     DSm *= (h*(1+z)**2)
 
-    X = ds - aDS
-    chi2 = np.dot(X, np.dot(icov, X))
-    print "chi2 = ", chi2
-
-    Nplots = 2
+    Nplots = 1
     fig, axarr = plt.subplots(Nplots, sharex=True)
     if Nplots == 1: axarr = [axarr]
     axarr[0].errorbar(Rdata[good], ds[good], dserr[:,good], c='k', marker='o', 
@@ -93,17 +84,31 @@ def plot_DS_in_bin(params, args, i, j):
     #plt.title(r"SV $z%d\lambda%d$"%(i,j))
     plt.subplots_adjust(bottom=0.17, left=0.2, hspace=0.0)
     axarr[0].set_ylim(0.1, 1e3)
-    axarr[0].set_xlim(0.03, 50.)
+    axarr[0].set_xlim(0.1, 30.)
+    if usey1:
+        axarr[0].text(2, 300, y1zlabels[i])
+        axarr[0].text(2, 100, y1llabels[j])
+        axarr[0].get_xaxis().set_visible(False)
+        axarr[0].get_yaxis().set_visible(False)
+        axarr[0].get_xaxis().set_ticks([])
+        axarr[0].get_yaxis().set_ticks([])
+
+    else:
+        axarr[0].text(3, 300, svzlabels[i])
+        axarr[0].text(3, 100, svllabels[j])
     plt.show()
 
 if __name__ == '__main__':
-    zs, lams = get_zs_and_lams()
+    usey1 = True
+    zs, lams = get_zs_and_lams(usey1=usey1)
     Rlams = (lams/100.0)**0.2 #Mpc/h; richness radius
+    SCIs = get_sigma_crit_inverses(usey1)
 
     #This specifies which analysis we are doing
     #Name options are full, fixed, boostfixed or Afixed
-    name = "sv" 
-    bstatus  = "unblinded" #blinded or unblinded
+    if usey1: name = "y1"
+    else:  name = "sv" 
+    bstatus  = "blinded" #blinded or unblinded
     basesuffix = bstatus+"_"+name+"_z%d_l%d"    
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
     chainbase   = "chains/chain_%s.txt"%basesuffix
@@ -122,21 +127,19 @@ if __name__ == '__main__':
             z    = zs[i,j]
             lam  = lams[i,j]
             Rlam = Rlams[i,j]
-            k, Plin, Pnl = get_power_spectra(i, j)
+            sigma_crit_inv = SCIs[i,j]/(h*(1+z)**2) #Convert to Msun h/pc^2 comoving
+            k, Plin, Pnl = get_power_spectra(i, j, usey1=usey1)
 
             Rmodel = np.logspace(-2, 3, num=1000, base=10) 
             xi_mm = clusterwl.xi.xi_mm_at_R(Rmodel, k, Pnl)
             #Xi_mm MUST be evaluated to higher than BAO for correct accuracy
             #Group everything up for convenience
-            cuts = (0.2, 21.5) #Radial cuts, Mpc physical, 20 just for SV
-            Redges = np.logspace(np.log10(0.02), np.log10(30.), num=Nbins+1)
-            Rmeans = 2./3. * (Redges[1:]**3 - Redges[:-1]**3)/(Redges[1:]**2 - Redges[:-1]**2) #Mpc physical
-            Redges *= h*(1+z) #Mpc/h comoving
-            indices = (Rmeans > cuts[0])*(Rmeans < cuts[1])
-            Rdata, ds, icov, cov = get_data_and_icov(i, j, alldata=True)
-            Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, highcut=Rlam*1.5/h/(1+z))
+            Redges = get_Redges(usey1 = usey1)*h*(1+z) #Mpc/h comoving
+            Rdata, ds, icov, cov, inds = get_data_and_icov(i, j, usey1=usey1, alldata=True)
+            Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, usey1=usey1)
 
-            args = (z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, indices, model_name)
+            cuts = get_cuts(i, j, usey1=usey1)
+            args = (z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cuts, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv, model_name, usey1)
             
             params = np.loadtxt(bestfitbase%(i,j))
 
