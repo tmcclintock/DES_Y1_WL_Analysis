@@ -79,7 +79,7 @@ def plot_DS_in_bin(params, args, i, j):
     if Nplots == 2:
         axarr[1].errorbar(Rb, Bp1, np.sqrt(np.diag(Bcov)), c='b')
         axarr[1].plot(Rmodel, boost, c='k')
-    #axarr[0].set_xlabel(Rlabel)
+    axarr[0].set_xlabel(Rlabel)
     #plt.text(2, 100, "%s\n%s"%(zlabels[i], llabels[j]))
     #plt.title(r"SV $z%d\lambda%d$"%(i,j))
     plt.subplots_adjust(bottom=0.17, left=0.2, hspace=0.0)
@@ -88,14 +88,15 @@ def plot_DS_in_bin(params, args, i, j):
     if usey1:
         axarr[0].text(2, 300, y1zlabels[i])
         axarr[0].text(2, 100, y1llabels[j])
-        axarr[0].get_xaxis().set_visible(False)
+        #axarr[0].get_xaxis().set_visible(False)
         axarr[0].get_yaxis().set_visible(False)
         axarr[0].get_xaxis().set_ticks([])
-        axarr[0].get_yaxis().set_ticks([])
+        #axarr[0].get_yaxis().set_ticks([])
 
     else:
         axarr[0].text(3, 300, svzlabels[i])
         axarr[0].text(3, 100, svllabels[j])
+    axarr[0].set_xlabel(Rlabel)
     plt.show()
 
 if __name__ == '__main__':
