@@ -3,6 +3,9 @@ This file contains functions used to make the analysis script easier to read. Th
 """
 import numpy as np
 
+#Are we using jackknifes?
+use_JK = True
+
 #Y1 paths
 y1base = "/Users/tmcclintock/Data/DATA_FILES/y1_data_files/"
 blinded = False
@@ -74,6 +77,11 @@ def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=F
     ds  = ds[indices]
     cov = cov[indices]
     cov = cov[:,indices]
+    #APPLY THE HARTLAP CORRECTION HERE
+    if using_JK:
+        Njk = 100.
+        D = len(R)
+        cov = cov*((Njk-1.)/(Njk-D-2))
     return R, ds, np.linalg.inv(cov), cov, indices
 
 def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True):
