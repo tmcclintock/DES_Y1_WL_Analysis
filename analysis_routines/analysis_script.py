@@ -46,8 +46,10 @@ def find_best_fit(bf_args, bestfitpath, bestfitvarpath, usey1):
     np.savetxt(bestfitvarpath, ihess)
     return 
 
-def do_mcmc():
+def do_mcmc(args, bfpath, chainpath, usey1):
     import emcee
+    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name = args
+    #Set up the walkers
     return 0
 
 if __name__ == '__main__':
