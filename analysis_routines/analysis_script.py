@@ -46,14 +46,25 @@ def find_best_fit(bf_args, bestfitpath, bestfitvarpath, usey1):
     np.savetxt(bestfitvarpath, ihess)
     return 
 
-def do_mcmc(args, bfpath, chainpath, usey1):
+def do_mcmc(args, bfpath, chainpath, likespath, usey1):
+    nwalkers, nsteps = 32, 5000
     import emcee
     z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name = args
-    #Set up the walkers
+    bfmodel = np.loadtxt(bfpath) #Has everything
+    start = get_mcmc_start(bfmodel, model_name)
+    ndim = len(start) #number of free parameters
+    pos = [start + 1e-3*np.random.randn(ndim) for k in range(nwalkers)]
+    print model_name
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(args,), threads=4)
+    print "Starting MCMC, saving to %s"%chainpath
+    sampler.run_mcmc(pos, nsteps)
+    print "MCMC complete"
+    #np.savetxt(chainpath, sampler.flatchain)
+    #np.savetxt(likespath, sampler.flatlnprobability)
     return 0
 
 if __name__ == '__main__':
-    usey1 = True
+    usey1 = False
     blinded = False
     zs, lams = get_zs_and_lams(usey1 = usey1)
     Rlams = (lams/100.0)**0.2 #Mpc/h; richness radius
@@ -72,13 +83,14 @@ if __name__ == '__main__':
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
     bestfitvarbase = "bestfits/bf_ihess_%s.txt"%basesuffix
     chainbase   = "chains/chain_%s.txt"%basesuffix
+    likesbase   = "chains/likes_%s.txt"%basesuffix
 
     import matplotlib.pyplot as plt
     #Loop over bins
-    for i in xrange(2, -1, -1): #z bins
-        if i > 2: continue
-        for j in xrange(6, 2, -1): #lambda bins
-            if j > 6 or j < 3: continue
+    for i in xrange(0, -1, -1): #z bins
+        if i > 0 : continue
+        for j in xrange(3, 2, -1): #lambda bins
+            if j > 3 or j < 3: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             z    = zs[i,j]
             lam  = lams[i,j]
@@ -96,7 +108,7 @@ if __name__ == '__main__':
             bfpath    = bestfitbase%(i, j)
             bfvarpath = bestfitvarbase%(i, j)
             chainpath = chainbase%(i, j)
-             
+            likespath = likesbase%(i, j)
 
             #Multiplicative prior
             Am_prior, Am_prior_var = get_Am_prior(i, j)
@@ -106,4 +118,5 @@ if __name__ == '__main__':
             args = (z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name)
 
             #Flow control for whatever you want to do
-            find_best_fit(args, bfpath, bfvarpath, usey1)
+            #find_best_fit(args, bfpath, bfvarpath, usey1)
+            do_mcmc(args, bfpath, chainpath, likespath, usey1)

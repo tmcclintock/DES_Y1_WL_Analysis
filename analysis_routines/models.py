@@ -15,11 +15,11 @@ Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h
 #the parameters, including their default values.
 def model_swap(params, name):
     c, tau, fmis, Am, B0, Rs, sigb = [defaults['conc'], defaults['tau'], defaults['fmis'], defaults['Am'], defaults['B0'], defaults['Rs'], defaults['sig_b']]
-    if name is "full":
+    if name == "full":
         lM, c, tau, fmis, Am, B0, Rs = params
-    if name is "Mc":
+    if name == "Mc":
         lM, c = params
-    if name is "Mfree":
+    if name == "Mfree":
         lM = params
     return [lM, c, tau, fmis, Am, B0, Rs, sigb]
 

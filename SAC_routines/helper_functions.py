@@ -54,7 +54,8 @@ def get_cluster_parameters(lams, zs, c_spline, N_want=1000, ML_scatter=0.25, MC_
     conc = np.exp(np.random.randn(N)*MC_scatter*np.log(10) + np.log(cs)-0.5*(MC_scatter*np.log(10))**2)
     #Make draws for miscentering
     ismis = np.random.rand(N) < 0.32 #Y1 prior
-    if not do_miscentering: ismis *= False
+    if not do_miscentering:
+        ismis *= False
     tau = np.random.randn(N)*0.003 +0.153
     Rlam = (lams/100)**0.2 #Mpc/h
     Rmis = tau*Rlam #Mpc/h
