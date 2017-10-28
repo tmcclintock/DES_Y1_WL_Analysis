@@ -4,9 +4,12 @@ DeltaSigma model.
 """
 import numpy as np
 import os, sys
-import helper_functions as HF
+import helper_functions as hf
 import clusterwl
-defaults = HF.get_model_defaults(0.7)
+cosmo = hf.get_cosmo_default()
+h = cosmo['h']
+om = cosmo['om']
+defaults = hf.get_model_defaults(0.7)
 
 #R perpendicular
 Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h
@@ -37,10 +40,8 @@ def boost_variance_model(sigma, R):
     return (sigma/R)**2 #R is in Mpc, pivot is 1 Mpc
 
 
-def get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv, model_name):
+def get_delta_sigma(params, z, Rlam, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv, model_name):
     lM, c, tau, fmis, Am, B0, Rs, sigb = model_swap(params, model_name)
-    om = cosmo['om']
-    h = cosmo['h']
     M = 10**lM
     xi_nfw   = clusterwl.xi.xi_nfw_at_R(Rmodel, M, c, om)
     bias = clusterwl.bias.bias_at_M(M, k, Plin, om)
@@ -67,10 +68,8 @@ def get_delta_sigma(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges,
     clusterwl.averaging.average_profile_in_bins(Redges, Rp, full_profile, ave_profile)
     return Rp, full_profile, ave_profile, boost_model
 
-def get_delta_sigma_all_parts(params, z, Rlam, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv, model_name):
+def get_delta_sigma_all_parts(params, z, Rlam, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv, model_name):
     lM, c, tau, fmis, Am, B0, Rs, sigb = params
-    om = cosmo['om']
-    h = cosmo['h']
     M = 10**lM
     xi_nfw   = clusterwl.xi.xi_nfw_at_R(Rmodel, M, c, om)
     bias = clusterwl.bias.bias_at_M(M, k, Plin, om)

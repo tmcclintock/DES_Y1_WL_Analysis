@@ -1,18 +1,3 @@
-"""
-This is the script that needs to be run in order to actually
-do the analysis.
-
-The functions in this file include:
-- a function to get the data
-- a function to get the covariance matrix
-- a function to get the boost factor data + covariance
-
-The main function at the bottom contains the actual script.
-
-NOTE: because DES Y1 hasn't had a public data release yet,
-all paths here are hard-coded in, since the data cannot be included
-in this repository yet.
-"""
 import numpy as np
 from likelihood_functions import *
 from helper_functions import *
@@ -29,7 +14,7 @@ h = cosmo['h'] #Hubble constant
 model_name = "Mc" #Mfree, Afixed, cfixed
 
 def find_best_fit(bf_args, bestfitpath, bestfitvarpath, usey1):
-    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name = bf_args
+    z, lam, Rlam, ds, icov, cov, Rb, Bp1, iBcov, Bcov, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name = bf_args
     guess = get_model_start(model_name, lam, h)
     import scipy.optimize as op
     nll = lambda *args: -lnprob(*args)
@@ -49,7 +34,7 @@ def find_best_fit(bf_args, bestfitpath, bestfitvarpath, usey1):
 def do_mcmc(args, bfpath, chainpath, likespath, usey1):
     nwalkers, nsteps = 32, 5000
     import emcee
-    z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name = args
+    z, lam, Rlam, ds, icov, cov, Rb, Bp1, iBcov, Bcov, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name = args
     bfmodel = np.loadtxt(bfpath) #Has everything
     start = get_mcmc_start(bfmodel, model_name)
     ndim = len(start) #number of free parameters
@@ -115,7 +100,7 @@ if __name__ == '__main__':
 
             #Group everything up for convenience
             Redges = get_Redges(usey1 = usey1)*h*(1+z) #Mpc/h comoving
-            args = (z, lam, Rlam, Rdata, ds, icov, cov, Rb, Bp1, iBcov, Bcov, cosmo, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name)
+            args = (z, lam, Rlam, ds, icov, cov, Rb, Bp1, iBcov, Bcov, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name)
 
             #Flow control for whatever you want to do
             #find_best_fit(args, bfpath, bfvarpath, usey1)
