@@ -13,6 +13,11 @@ h = cosmo['h'] #Hubble constant
 
 model_name = "Mc" #Mfree, Afixed, cfixed
 
+def test_call(args):
+    guess = get_model_start(model_name, lam, h)
+    print "lnprob(start) = ", lnprob(guess, args)
+    return
+
 def find_best_fit(bf_args, bestfitpath, bestfitvarpath, usey1):
     z, lam, Rlam, ds, icov, cov, Rb, Bp1, iBcov, Bcov, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name = bf_args
     guess = get_model_start(model_name, lam, h)
@@ -49,7 +54,7 @@ def do_mcmc(args, bfpath, chainpath, likespath, usey1):
     return 0
 
 if __name__ == '__main__':
-    usey1 = False
+    usey1 = True
     blinded = False
     zs, lams = get_zs_and_lams(usey1 = usey1)
     Rlams = (lams/100.0)**0.2 #Mpc/h; richness radius
@@ -103,5 +108,6 @@ if __name__ == '__main__':
             args = (z, lam, Rlam, ds, icov, cov, Rb, Bp1, iBcov, Bcov, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name)
 
             #Flow control for whatever you want to do
+            test_call(args)
             #find_best_fit(args, bfpath, bfvarpath, usey1)
-            do_mcmc(args, bfpath, chainpath, likespath, usey1)
+            #do_mcmc(args, bfpath, chainpath, likespath, usey1)
