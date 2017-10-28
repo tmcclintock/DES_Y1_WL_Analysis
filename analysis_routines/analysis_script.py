@@ -19,6 +19,7 @@ def test_call(args, bfpath=None, testbf=False):
         guess = np.loadtxt(bfpath) #Has everything
         args['model_name'] = "full" #always use full here
     print "Test call: lnprob(start) = ", lnprob(guess, args)
+    print ""
     return
 
 def find_best_fit(args, bestfitpath, usey1):
@@ -77,10 +78,10 @@ if __name__ == '__main__':
 
     import matplotlib.pyplot as plt
     #Loop over bins
-    for i in xrange(0, -1, -1): #z bins
-        if i > 0 : continue
-        for j in xrange(6, 5, -1): #lambda bins
-            if j > 6 or j < 6: continue
+    for i in xrange(2, -1, -1): #z bins
+        if i > 2: continue
+        for j in xrange(6, 2, -1): #lambda bins
+            if j > 6 or j < 3: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             z    = zs[i,j]
             lam  = lams[i,j]

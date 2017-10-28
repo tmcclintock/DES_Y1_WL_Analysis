@@ -18,10 +18,10 @@ else:
     y1base2 = y1base+"FINAL_FILES/"
     y1database     = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_profile.dat"
     y1covbase      = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_dst_cov.dat"
-y1boostbase    = y1base+"FINAL_FILES/full-unblind-mcal-zmix_y1subtr_l%d_z%d_corr_boost.dat"
-y1boostcovbase = y1base+"FINAL_FILES/full-unblind-mcal-zmix_y1subtr_l%d_z%d_corr_boost_cov.dat"
-y1boostbase = y1base+"boost_files/redcurves/red_z%d_l%d.txt"
-y1boostcovbase = y1base+"boost_files/redcurves/cov_z%d_l%d.txt"
+y1boostbase    = y1base+"FINAL_FILES/full-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"
+y1boostcovbase = y1base+"FINAL_FILES/full-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"
+#y1boostbase = y1base+"boost_files/redcurves/red_z%d_l%d.txt"
+#y1boostcovbase = y1base+"boost_files/redcurves/cov_z%d_l%d.txt"
 
 y1zspath   = y1base+"Y1_meanz.txt"
 y1lamspath = y1base+"Y1_meanl.txt"
@@ -94,10 +94,11 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alld
     if usey1:
         boostpath = y1boostbase%(lj, zi)
         bcovpath  = y1boostcovbase%(lj, zi)
-        boostpath = y1boostbase%(zi, lj) #TEMP
-        bcovpath  = y1boostcovbase%(zi, lj) #TEMP
-        Bcov = np.loadtxt(bcovpath)
+        #boostpath = y1boostbase%(zi, lj) #TEMP
+        #bcovpath  = y1boostcovbase%(zi, lj) #TEMP
+        Bcov = np.diag(np.loadtxt(bcovpath)) #np.loadtxt(bcovpath)
         Rb, Bp1, Be = np.genfromtxt(boostpath, unpack=True)
+        print Rb.shape, Bp1.shape, Be.shape, Bcov.shape
         if alldata:
             return Rb, Bp1, np.linalg.inv(Bcov), Bcov
         Becut = Be > 1e-6

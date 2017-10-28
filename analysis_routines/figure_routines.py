@@ -66,7 +66,6 @@ def plot_DS_in_bin(params, args, i, j):
     dserr = np.sqrt(np.diag(cov))
     dserr_fixed = fix_errorbars(ds, dserr)
     Rmodel, DSfull, DSc, DSm, boost, aDS = calc_DS_model(params, args)
-    boost_Rdata = get_boost_model(B0, Rs*(h*(1+z)), Rdata)
     #Convert to Mpc physical
     Rmodel /= h*(1+z)
     DSfull *= h*(1+z)**2
@@ -85,30 +84,34 @@ def plot_DS_in_bin(params, args, i, j):
     axarr[0].loglog(Rmodel, DSfull*boost, c='g', ls='-', zorder=-2)
     axarr[0].set_ylabel(DSlabel)
 
+    
     pd = (ds - aDS)/aDS
     pde = dserr/aDS
     axarr[2].errorbar(Rdata[good], pd[good], pde[good], c='k', marker='o', ls='', markersize=3, zorder=1)
     axarr[2].errorbar(Rdata[bad], pd[bad], pde[bad], c='k', marker='o', mfc='w', markersize=3, ls='', zorder=1)
     axarr[2].axhline(0, ls='-', c='k')
-
+    
     Rb = args['Rb']
     Bp1 = args['Bp1']
     Berr = np.sqrt(np.diag(args['Bcov']))
-
+    boost_Rb = get_boost_model(B0, Rs*(h*(1+z)), Rb)
+    good = (lo<Rb)*(Rb<hi)
+    bad  = (lo>Rb)+(Rb>hi)
     axarr[1].errorbar(Rb[good], Bp1[good], Berr[good], c='k', marker='o', ls='', markersize=3, zorder=1)
     axarr[1].errorbar(Rb[bad], Bp1[bad], Berr[bad], c='k', marker='o', ls='', markersize=3, zorder=1, mfc='w')
     axarr[1].plot(Rmodel, boost, c='r')
     axarr[1].axhline(1, ls='-', c='k')
     axarr[1].set_yticklabels([])
     axarr[1].get_yaxis().set_visible(False)
+    axarr[1].set_ylim(.9, 1.8)
     axtwin = axarr[1].twinx()
     axtwin.set_ylabel(r"$1-f_{\rm cl}$")
     axtwin.set_ylim(axarr[1].get_ylim())
 
-    pd = (Bp1 - boost_Rdata)/(boost_Rdata-1)
-    pde = Berr/(boost_Rdata-1)
-    axarr[3].errorbar(Rdata[good], pd[good], pde[good], c='k', marker='o', ls='', markersize=3, zorder=1)
-    axarr[3].errorbar(Rdata[bad], pd[bad], pde[bad], c='k', marker='o', mfc='w', markersize=3, ls='', zorder=1)
+    pd = (Bp1 - boost_Rb)/(boost_Rb-1)
+    pde = Berr/(boost_Rb-1)
+    axarr[3].errorbar(Rb[good], pd[good], pde[good], c='k', marker='o', ls='', markersize=3, zorder=1)
+    axarr[3].errorbar(Rb[bad], pd[bad], pde[bad], c='k', marker='o', mfc='w', markersize=3, ls='', zorder=1)
     axarr[3].axhline(0, ls='-', c='k')
     axarr[3].set_yticklabels([])
 
@@ -129,8 +132,8 @@ def plot_DS_in_bin(params, args, i, j):
     axarr[3].set_xticks([1, 10])
     if usey1: zlabel, llabel = y1zlabels[i], y1llabels[j]
     else: zlabel, llabel = svzlabels[i], svllabels[j]
-    axarr[1].text(.2, 1.75, zlabel, fontsize=18)
-    axarr[1].text(.2, 1.6,  llabel, fontsize=18)
+    axarr[1].text(.8, 1.65, zlabel, fontsize=18)
+    axarr[1].text(.8, 1.5,  llabel, fontsize=18)
     #plt.suptitle("%s %s"%(zlabel, llabel))
     plt.show()
 
@@ -159,9 +162,9 @@ if __name__ == '__main__':
 
     #Loop over bins
     for i in xrange(2, -1, -1): #z bins
-        if i > 0: continue
+        if i <2: continue
         for j in xrange(6, -1, -1): #lambda bins
-            if j > 6 or j < 6: continue
+            if j > 4 or j < 4: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             #Read in everything
             z    = zs[i,j]
