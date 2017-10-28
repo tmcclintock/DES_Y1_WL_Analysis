@@ -20,6 +20,8 @@ else:
     y1covbase      = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_dst_cov.dat"
 y1boostbase    = y1base+"FINAL_FILES/full-unblind-mcal-zmix_y1subtr_l%d_z%d_corr_boost.dat"
 y1boostcovbase = y1base+"FINAL_FILES/full-unblind-mcal-zmix_y1subtr_l%d_z%d_corr_boost_cov.dat"
+y1boostbase = y1base+"boost_files/redcurves/red_z%d_l%d.txt"
+y1boostcovbase = y1base+"boost_files/redcurves/cov_z%d_l%d.txt"
 
 y1zspath   = y1base+"Y1_meanz.txt"
 y1lamspath = y1base+"Y1_meanl.txt"
@@ -88,22 +90,27 @@ def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=F
         cov = cov*((Njk-1.)/(Njk-D-2))
     return R, ds, np.linalg.inv(cov), cov, indices
 
-def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True):
+def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=False, diag_only=False):
     if usey1:
         boostpath = y1boostbase%(lj, zi)
         bcovpath  = y1boostcovbase%(lj, zi)
+        boostpath = y1boostbase%(zi, lj) #TEMP
+        bcovpath  = y1boostcovbase%(zi, lj) #TEMP
         Bcov = np.loadtxt(bcovpath)
-        Rb, Bp1, Be = np.genfromtxt(boostpath, unpack=True, skip_header=1)
-        Bp1 = Bp1[Be > 1e-6]
-        Rb  = Rb[Be > 1e-6]
-        Be  = Be[Be > 1e-6]
+        Rb, Bp1, Be = np.genfromtxt(boostpath, unpack=True)
+        if alldata:
+            return Rb, Bp1, np.linalg.inv(Bcov), Bcov
+        Becut = Be > 1e-6
+        Bp1 = Bp1[Becut]
+        Rb  = Rb[Becut]
+        Be  = Be[Becut]
         indices = (Rb > lowcut)*(Rb < highcut)
         Bp1 = Bp1[indices]
         Rb  = Rb[indices]
         Be  = Be[indices]
         Bcov = Bcov[indices]
         Bcov = Bcov[:,indices]
-        #Bcov = np.diag(Be**2)
+        if diag_only: Bcov = np.diag(Be**2)
         #Note: the boost factors don't have the same number of radial bins
         #as deltasigma. This doesn't matter, because all we do is
         #de-boost the model, which fits to the boost factors independently.
@@ -117,6 +124,9 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True):
         #SV didn't have boost errors. We construct them instead
         del2 = 10**-4.09 #BF result from SV
         Be = np.sqrt(del2/Rb**2)
+        if alldata:
+            Bcov = np.diag(Be**2)
+            return Rb, Bp1, np.linalg.inv(Bcov), Bcov
         indices = (Rb > lowcut)*(Rb < highcut)
         Bp1 = Bp1[indices]
         Rb  = Rb[indices]

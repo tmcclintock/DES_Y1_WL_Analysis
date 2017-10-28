@@ -22,13 +22,13 @@ def lnprior(params, Am_prior, Am_prior_var):
 def lnlike(params, args):
     lM, c, tau, fmis, Am, B0, Rs, sigb = params
 
-    Rp, full_DeltaSigma, ave_DeltaSigma, full_boost_model = get_delta_sigma(params, args)
+    Rp, Sigma, Sigma_mis, DScen, DSmis, full_DeltaSigma, ave_DeltaSigma, full_boost_model = get_delta_sigma(params, args)
     inds = args['inds']
     z = args['z']
     ds = args['ds']
     icov = args['icov']
     ds_model = ave_DeltaSigma[inds]
-    ds_model *= h*(1+z)**2 #physical
+    ds_model *= h*(1+z)**2 #convert to Msun/pc^2 physical
     X = ds - ds_model
     LLDS = -0.5*np.dot(X, np.dot(icov, X))
     
