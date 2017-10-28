@@ -11,35 +11,33 @@ Blinding_amp, lam_exp, z_exp = blinding.get_blinding_variables()
 cosmo = get_cosmo_default()
 h = cosmo['h'] #Hubble constant
 
-model_name = "Mc" #Mfree, Afixed, cfixed
+model_name = "M" #Mc, full, Afixed, cfixed
 
 def test_call(args):
+    lam = args['lam']
     guess = get_model_start(model_name, lam, h)
-    print "lnprob(start) = ", lnprob(guess, args)
+    print "Test call: lnprob(start) = ", lnprob(guess, args)
     return
 
-def find_best_fit(bf_args, bestfitpath, bestfitvarpath, usey1):
-    z, lam, Rlam, ds, icov, cov, Rb, Bp1, iBcov, Bcov, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name = bf_args
+def find_best_fit(args, bestfitpath, usey1):
+    z = args['z']
+    lam = args['lam']
+    model_name = args['model_name']
     guess = get_model_start(model_name, lam, h)
     import scipy.optimize as op
     nll = lambda *args: -lnprob(*args)
-    result = op.minimize(nll, guess, args=(bf_args,), tol=1e-2)
+    result = op.minimize(nll, guess, args=(args,), tol=1e-2)
     print "Best fit being saved at :\n%s"%bestfitpath
-    #print result
-    #print "\tresults: ",result['x']
     print "\tsuccess = %s"%result['success']
-    ihess = result['hess_inv']
-    #print "lM = %.3f"%(lM - np.log10(h))
-    outmodel = models.model_swap(result['x'], model_name)
+    outmodel = models.model_swap(result['x'], z, model_name)
     if usey1: outmodel[0]+= np.log10(Blinding_amp) +  np.log10((lam/30.0)**lam_exp) + np.log10(((1+z)/1.5)**z_exp)
     np.savetxt(bestfitpath, outmodel)
-    np.savetxt(bestfitvarpath, ihess)
     return 
 
 def do_mcmc(args, bfpath, chainpath, likespath, usey1):
     nwalkers, nsteps = 32, 5000
     import emcee
-    z, lam, Rlam, ds, icov, cov, Rb, Bp1, iBcov, Bcov, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name = args
+    model_name = args['model_name']
     bfmodel = np.loadtxt(bfpath) #Has everything
     start = get_mcmc_start(bfmodel, model_name)
     ndim = len(start) #number of free parameters
@@ -55,7 +53,7 @@ def do_mcmc(args, bfpath, chainpath, likespath, usey1):
 
 if __name__ == '__main__':
     usey1 = True
-    blinded = False
+    blinded = True
     zs, lams = get_zs_and_lams(usey1 = usey1)
     Rlams = (lams/100.0)**0.2 #Mpc/h; richness radius
     SCIs = get_sigma_crit_inverses(usey1)
@@ -71,7 +69,6 @@ if __name__ == '__main__':
         bstatus = "unblinded"
     basesuffix = bstatus+"_"+name+"_z%d_l%d"    
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
-    bestfitvarbase = "bestfits/bf_ihess_%s.txt"%basesuffix
     chainbase   = "chains/chain_%s.txt"%basesuffix
     likesbase   = "chains/likes_%s.txt"%basesuffix
 
@@ -96,7 +93,6 @@ if __name__ == '__main__':
 
             Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, usey1=usey1)
             bfpath    = bestfitbase%(i, j)
-            bfvarpath = bestfitvarbase%(i, j)
             chainpath = chainbase%(i, j)
             likespath = likesbase%(i, j)
 
@@ -105,9 +101,12 @@ if __name__ == '__main__':
 
             #Group everything up for convenience
             Redges = get_Redges(usey1 = usey1)*h*(1+z) #Mpc/h comoving
-            args = (z, lam, Rlam, ds, icov, cov, Rb, Bp1, iBcov, Bcov, k, Plin, Pnl, Rmodel, xi_mm, Redges, inds, Am_prior, Am_prior_var, sigma_crit_inv, model_name)
+            blinding_factor = 0
+            if blinded: blinding_factor = np.log10(Blinding_amp) +  np.log10((lam/30.0)**lam_exp) + np.log10(((1+z)/1.5)**z_exp)
+            
+            args = {"z":z, "lam":lam, "Rlam":Rlam, "Rdata":Rdata, "ds":ds, "cov":cov, "icov":icov, "Rb":Rb, "Bp1":Bp1, "Bcov":Bcov, "iBcov":iBcov, "k":k, "Plin":Plin, "Pnl":Pnl, "Rmodel":Rmodel, "xi_mm":xi_mm, "Redges":Redges, "inds":inds, "Am_prior":Am_prior, "Am_prior_var":Am_prior_var, "sigma_crit_inv":sigma_crit_inv, "blinding_factor":blinding_factor, "model_name":model_name}
 
             #Flow control for whatever you want to do
             test_call(args)
-            #find_best_fit(args, bfpath, bfvarpath, usey1)
+            #find_best_fit(args, bfpath, usey1)
             #do_mcmc(args, bfpath, chainpath, likespath, usey1)

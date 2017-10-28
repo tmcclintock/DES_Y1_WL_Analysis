@@ -14,17 +14,20 @@ defaults = hf.get_model_defaults(0.7)
 #R perpendicular
 Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h
 
+conc_spline = hf.get_concentration_spline()
+
 #Swap between whatever model type we are working with and return
 #the parameters, including their default values.
-def model_swap(params, name):
+def model_swap(params, z, blinding_factor, name):
     c, tau, fmis, Am, B0, Rs, sigb = [defaults['conc'], defaults['tau'], defaults['fmis'], defaults['Am'], defaults['B0'], defaults['Rs'], defaults['sig_b']]
     if name == "full":
         lM, c, tau, fmis, Am, B0, Rs = params
     if name == "Mc":
         lM, c = params
-    if name == "Mfree":
+    if name == "M":
         lM = params
-    return [lM, c, tau, fmis, Am, B0, Rs, sigb]
+        c = conc_spline(10**(lM-blinding_factor), z)
+    return [lM-blinding_factor, c, tau, fmis, Am, B0, Rs, sigb]
 
 #Boost factor model
 def get_boost_model(b0, Rs, R):
@@ -39,9 +42,16 @@ def get_boost_model(b0, Rs, R):
 def boost_variance_model(sigma, R):
     return (sigma/R)**2 #R is in Mpc, pivot is 1 Mpc
 
-
-def get_delta_sigma(params, z, Rlam, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv, model_name):
-    lM, c, tau, fmis, Am, B0, Rs, sigb = model_swap(params, model_name)
+def get_delta_sigma(params, args):
+    lM, c, tau, fmis, Am, B0, Rs, sigb = params
+    Rmodel = args['Rmodel']
+    k = args['k']
+    Plin = args['Plin']
+    xi_mm = args['xi_mm']
+    Rlam = args['Rlam']
+    z = args['z']
+    sigma_crit_inv = args['sigma_crit_inv']
+    Redges = args['Redges']
     M = 10**lM
     xi_nfw   = clusterwl.xi.xi_nfw_at_R(Rmodel, M, c, om)
     bias = clusterwl.bias.bias_at_M(M, k, Plin, om)
@@ -54,11 +64,8 @@ def get_delta_sigma(params, z, Rlam, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_
     DeltaSigma_mis = clusterwl.miscentering.DeltaSigma_mis_at_R(Rp, Rp, Sigma_mis)
 
     full_Sigma = (1-fmis)*Sigma + fmis*Sigma_mis
-    #kappa = full_sigma/Sigma_crit_inv
     full_profile = (1-fmis)*DeltaSigma + fmis*DeltaSigma_mis
-
     full_profile *= Am #multiplicative bias
-
     #Note: Rs is default in Mpc physical
     boost_model = get_boost_model(B0, Rs*(h*(1+z)), Rp)
     full_profile /= boost_model #de-boost the model
@@ -68,7 +75,7 @@ def get_delta_sigma(params, z, Rlam, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_
     clusterwl.averaging.average_profile_in_bins(Redges, Rp, full_profile, ave_profile)
     return Rp, full_profile, ave_profile, boost_model
 
-def get_delta_sigma_all_parts(params, z, Rlam, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv, model_name):
+def get_delta_sigma_all_parts(params, z, Rlam, k, Plin, Pnl, Rmodel, xi_mm, Redges, sigma_crit_inv):
     lM, c, tau, fmis, Am, B0, Rs, sigb = params
     M = 10**lM
     xi_nfw   = clusterwl.xi.xi_nfw_at_R(Rmodel, M, c, om)

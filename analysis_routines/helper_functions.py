@@ -2,6 +2,7 @@
 This file contains functions used to make the analysis script easier to read. This includes file IO and loading various things.
 """
 import numpy as np
+from scipy.interpolate import interp2d
 
 #Are we using jackknifes?
 use_JK = True
@@ -32,6 +33,9 @@ svzspath   = svbase+"SV_meanz.txt"
 svlamspath = svbase+"SV_meanl.txt"
 #Sigma crit inverse path
 SCIpath = "../photoz_calibration/sigma_crit_inv.txt"
+
+h = 0.7
+om = 0.3
 
 def get_zs_and_lams(usey1):
     lams = get_lams(usey1)
@@ -152,8 +156,8 @@ def get_model_start(model_name, lam, h):
                  defaults['Rs']]
     elif model_name is "Mc":
         guess = [lM_guess, 4.5]
-    elif model_name is "Mfree":
-        guess = [lM_guess]
+    elif model_name is "M":
+        guess = lM_guess
     return guess
 
 def get_mcmc_start(model, model_name):
@@ -193,3 +197,18 @@ def get_Redges(usey1):
     if usey1: return np.logspace(np.log10(0.0323), np.log10(30.), num=Nbins+1)
     else: return np.logspace(np.log10(0.02), np.log10(30.), num=Nbins+1) #use_sv
 
+#Set up the Concentration spline
+def get_concentration_spline():
+    from colossus.halo import concentration
+    from colossus.cosmology import cosmology
+    cos = {'flat':True,'H0':h*100.,'Om0':om,'Ob0':0.05,'sigma8':0.8,'ns':0.96}
+    cosmology.addCosmology('fiducial', cos)
+    cosmology.setCosmology('fiducial')
+    N = 20
+    M = np.logspace(12, 17, N)
+    z = np.linspace(0.2, 0.65, N)
+    c_array = np.ones((N, N))
+    for i in range(N):
+        for j in range(N):
+            c_array[j,i] = concentration.concentration(M[i],'200m',z=z[j],model='diemer15')
+    return interp2d(M, z, c_array)
