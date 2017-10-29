@@ -57,6 +57,7 @@ def get_delta_sigma(params, args):
     bias = clusterwl.bias.bias_at_M(M, k, Plin, om)
     xi_2halo = clusterwl.xi.xi_2halo(bias, xi_mm)
     xi_hm    = clusterwl.xi.xi_hm(xi_nfw, xi_2halo)
+    Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h
     Sigma  = clusterwl.deltasigma.Sigma_at_R(Rp, Rmodel, xi_hm, M, c, om)
     DeltaSigma = clusterwl.deltasigma.DeltaSigma_at_R(Rp, Rp, Sigma, M, c, om)
     Rmis = tau*Rlam #Mpc/h

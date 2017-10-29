@@ -73,6 +73,12 @@ def plot_DS_in_bin(params, args, i, j):
     DSm *= h*(1+z)**2
     aDS *= h*(1+z)**2
 
+    X = (ds- aDS)[good]
+    cov = cov[good]
+    cov = cov[:, good]
+    chi2 = np.dot(X, np.dot(np.linalg.inv(cov), X))
+    N = len(X)
+
     gs = gridspec.GridSpec(3, 6)
     axarr = [plt.subplot(gs[0:2, 0:3]), plt.subplot(gs[0:2, 3:]), plt.subplot(gs[-1, 0:3]), plt.subplot(gs[-1, 3:])]
     axarr[0].errorbar(Rdata[good], ds[good], dserr_fixed[:,good], c='k', marker='o', ls='', markersize=3, zorder=1)
@@ -83,7 +89,6 @@ def plot_DS_in_bin(params, args, i, j):
     axarr[0].loglog(Rmodel, DSc, c='k', ls='-.', zorder=-3)
     axarr[0].loglog(Rmodel, DSfull*boost, c='g', ls='-', zorder=-2)
     axarr[0].set_ylabel(DSlabel)
-
     
     pd = (ds - aDS)/aDS
     pde = dserr/aDS
@@ -93,7 +98,8 @@ def plot_DS_in_bin(params, args, i, j):
     
     Rb = args['Rb']
     Bp1 = args['Bp1']
-    Berr = np.sqrt(np.diag(args['Bcov']))
+    Bcov = args['Bcov']
+    Berr = np.sqrt(np.diag(Bcov))
     boost_Rb = get_boost_model(B0, Rs*(h*(1+z)), Rb)
     good = (lo<Rb)*(Rb<hi)
     bad  = (lo>Rb)+(Rb>hi)
@@ -108,6 +114,12 @@ def plot_DS_in_bin(params, args, i, j):
     axtwin.set_ylabel(r"$1-f_{\rm cl}$")
     axtwin.set_ylim(axarr[1].get_ylim())
 
+    X = (Bp1 - boost_Rb)[good]
+    Bcov = Bcov[good]
+    Bcov = Bcov[:, good]
+    chi2 += np.dot(X, np.dot(np.linalg.inv(Bcov), X))
+    N += len(X)
+    
     pd = (Bp1 - boost_Rb)/(boost_Rb-1)
     pde = Berr/(boost_Rb-1)
     axarr[3].errorbar(Rb[good], pd[good], pde[good], c='k', marker='o', ls='', markersize=3, zorder=1)
@@ -134,9 +146,13 @@ def plot_DS_in_bin(params, args, i, j):
     else: zlabel, llabel = svzlabels[i], svllabels[j]
     axarr[1].text(.8, 1.65, zlabel, fontsize=18)
     axarr[1].text(.8, 1.5,  llabel, fontsize=18)
+    axarr[1].text(.8, 1.35, r"$\chi^2=%.1f/%d$"%(chi2, N), fontsize=18)
     #plt.suptitle("%s %s"%(zlabel, llabel))
-    plt.show()
-
+    plt.gcf().savefig("figures/fourpanel_z%d_l%d.png"%(i,j))
+    #plt.show()
+    plt.clf()
+    #plt.close()
+    
 if __name__ == '__main__':
     usey1 = True
     blinded = True
@@ -156,15 +172,11 @@ if __name__ == '__main__':
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
     chainbase   = "chains/chain_%s.txt"%basesuffix
 
-    #The bin edges in Mpc physical
-    Nbins = 15
-    Redges = np.logspace(np.log(0.0323), np.log(30.), num=Nbins+1, base=np.e)
-
     #Loop over bins
     for i in xrange(2, -1, -1): #z bins
-        if i <2: continue
-        for j in xrange(6, -1, -1): #lambda bins
-            if j > 4 or j < 4: continue
+        if i > 2: continue
+        for j in xrange(2, -1, -1): #lambda bins
+            if j > 2 or j < 0: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             #Read in everything
             z    = zs[i,j]
@@ -173,7 +185,7 @@ if __name__ == '__main__':
             sigma_crit_inv = SCIs[i,j]*(h*(1+z)**2) #Convert to pc^2/hMsun comoving
             k, Plin, Pnl = get_power_spectra(i, j, usey1=usey1)
 
-            Rmodel = np.logspace(-2, 3, num=1000, base=10) 
+            Rmodel = np.logspace(-2, 3, num=1000, base=10)
             xi_mm = clusterwl.xi.xi_mm_at_R(Rmodel, k, Pnl)
             #Xi_mm MUST be evaluated to higher than BAO for correct accuracy
             #Group everything up for convenience

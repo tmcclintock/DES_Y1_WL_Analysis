@@ -80,8 +80,8 @@ if __name__ == '__main__':
     #Loop over bins
     for i in xrange(2, -1, -1): #z bins
         if i > 2: continue
-        for j in xrange(6, 2, -1): #lambda bins
-            if j > 6 or j < 3: continue
+        for j in xrange(2, -1, -1): #lambda bins
+            if j > 6 or j < 0: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             z    = zs[i,j]
             lam  = lams[i,j]
@@ -95,7 +95,7 @@ if __name__ == '__main__':
             #Note: convert Rlam to Mpc physical when we specificy the cuts
             Rdata, ds, icov, cov, inds = get_data_and_icov(i, j, usey1=usey1)
 
-            Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, usey1=usey1, diag_only=True)#, alldata=True)
+            Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, usey1=usey1)#, diag_only=True)#, alldata=True)
             bfpath    = bestfitbase%(i, j)
             chainpath = chainbase%(i, j)
             likespath = likesbase%(i, j)

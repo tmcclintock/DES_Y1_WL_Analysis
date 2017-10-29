@@ -96,15 +96,17 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alld
         bcovpath  = y1boostcovbase%(lj, zi)
         #boostpath = y1boostbase%(zi, lj) #TEMP
         #bcovpath  = y1boostcovbase%(zi, lj) #TEMP
-        Bcov = np.diag(np.loadtxt(bcovpath)) #np.loadtxt(bcovpath)
+        Bcov = np.loadtxt(bcovpath)
         Rb, Bp1, Be = np.genfromtxt(boostpath, unpack=True)
         print Rb.shape, Bp1.shape, Be.shape, Bcov.shape
-        if alldata:
-            return Rb, Bp1, np.linalg.inv(Bcov), Bcov
         Becut = Be > 1e-6
         Bp1 = Bp1[Becut]
         Rb  = Rb[Becut]
         Be  = Be[Becut]
+        Bcov = Bcov[Becut]
+        Bcov = Bcov[:,Becut]
+        if alldata: #Still make this cut though
+            return Rb, Bp1, np.linalg.inv(Bcov), Bcov
         indices = (Rb > lowcut)*(Rb < highcut)
         Bp1 = Bp1[indices]
         Rb  = Rb[indices]
