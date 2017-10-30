@@ -9,15 +9,10 @@ use_JK = True
 
 #Y1 paths
 y1base = "/Users/tmcclintock/Data/DATA_FILES/y1_data_files/"
-blinded = False
-if blinded:
-    y1base2 = y1base+"blinded_tamas_files/"
-    y1database     = y1base2+"full-mcal-raw_y1subtr_l%d_z%d_profile.dat"
-    y1covbase      = y1base2+"full-mcal-raw_y1subtr_l%d_z%d_dst_cov.dat"
-else:
-    y1base2 = y1base+"FINAL_FILES/"
-    y1database     = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_profile.dat"
-    y1covbase      = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_dst_cov.dat"
+y1base2 = y1base+"FINAL_FILES/"
+y1database     = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_profile.dat"
+y1JKcovbase      = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_dst_cov.dat"
+y1SACcovbase     = y1base2+"NOT IMPLEMENTED YET"
 y1boostbase    = y1base+"FINAL_FILES/full-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"
 y1boostcovbase = y1base+"FINAL_FILES/full-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"
 #y1boostbase = y1base+"boost_files/redcurves/red_z%d_l%d.txt"
@@ -64,12 +59,14 @@ def get_power_spectra(zi, lj, usey1):
     Pnl  = np.genfromtxt(base+"P_files/pnl_z%d_l%d.txt"%(zi, lj))
     return k, Plin, Pnl
     
-def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=False):
+def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=False, useJK=True):
     #lowcut is the lower cutoff, assumed to be 0.2 Mpc physical
     #highcut might not be implemented in this analysis
     if usey1:
+        print "Y1 data z%d l%d"%(zi, lj)
         datapath = y1database%(lj, zi)
-        covpath = y1covbase%(lj, zi)
+        if useJK: covpath = y1JKcovbase%(lj, zi)
+        else: covpath = y1SACcovbase%(zi, lj)
     else:
         print "SV data z%d l%d"%(zi, lj)
         datapath = svdatabase%(zi, lj)

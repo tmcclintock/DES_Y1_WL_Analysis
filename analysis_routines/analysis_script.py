@@ -58,20 +58,21 @@ def do_mcmc(args, bfpath, chainpath, likespath, usey1):
 if __name__ == '__main__':
     usey1 = True
     blinded = True
+    useJK = True
     zs, lams = get_zs_and_lams(usey1 = usey1)
     Rlams = (lams/100.0)**0.2 #Mpc/h; richness radius
     SCIs = get_sigma_crit_inverses(usey1)
 
     #This specifies which analysis we are doing
     #Name options are full, fixed, boostfixed or Afixed
-    if usey1:
+    if usey1: 
         name = "y1"
-        if blinded: bstatus = "blinded"
-        else: bstatus = "unblinded"
+        if useJK: covname = "JK"
+        else: covname = "SAC"
     else:
         name = "sv"
-        bstatus = "unblinded"
-    basesuffix = bstatus+"_"+name+"_z%d_l%d"    
+        covname = "JK"
+    basesuffix = name+"_"+covname+"_z%d_l%d"    
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
     chainbase   = "chains/chain_%s.txt"%basesuffix
     likesbase   = "chains/likes_%s.txt"%basesuffix
