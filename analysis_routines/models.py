@@ -18,8 +18,12 @@ conc_spline = hf.get_concentration_spline()
 
 #Swap between whatever model type we are working with and return
 #the parameters, including their default values.
-def model_swap(params, z, blinding_factor, name):
-    c, tau, fmis, Am, B0, Rs, sigb = [defaults['conc'], defaults['tau'], defaults['fmis'], defaults['Am'], defaults['B0'], defaults['Rs'], defaults['sig_b']]
+def model_swap(params, z, blinding_factor, name, bf_defaults=None):
+    if bf_defaults is not None:
+        lM0, c, tau, fmis, Am, B0, Rs = bf_defaults
+        sigb = defaults['sig_b'] #Not used in fits at this time
+    else:
+        c, tau, fmis, Am, B0, Rs, sigb = [defaults['conc'], defaults['tau'], defaults['fmis'], defaults['Am'], defaults['B0'], defaults['Rs'], defaults['sig_b']]
     if name == "full":
         lM, c, tau, fmis, Am, B0, Rs = params
     if name == "Mc":

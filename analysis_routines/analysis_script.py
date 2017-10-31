@@ -38,21 +38,28 @@ def find_best_fit(args, bestfitpath, usey1):
     np.savetxt(bestfitpath, result['x'])
     return 
 
-def do_mcmc(args, bfpath, chainpath, likespath, usey1):
+def do_mcmc(args, bfpath, chainpath, likespath, usey1, new_chain=True):
     nwalkers, nsteps = 32, 5000
     import emcee
     model_name = args['model_name']
     bfmodel = np.loadtxt(bfpath) #Has everything
+    args['bf_defaults'] = bfmodel
     start = get_mcmc_start(bfmodel, model_name)
     ndim = len(start) #number of free parameters
     pos = [start + 1e-3*np.random.randn(ndim) for k in range(nwalkers)]
-    print model_name
-    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(args,), threads=4)
+    sampler = emcee.EnsembleSampler(nwalkers, ndim, lnprob, args=(args,), threads=8)
     print "Starting MCMC, saving to %s"%chainpath
     sampler.run_mcmc(pos, nsteps)
     print "MCMC complete"
-    #np.savetxt(chainpath, sampler.flatchain)
-    #np.savetxt(likespath, sampler.flatlnprobability)
+    if new_chain:
+        np.savetxt(chainpath, sampler.flatchain)
+        np.savetxt(likespath, sampler.flatlnprobability)
+    else: #add to old chain
+        chain = np.loadtxt(chainpath)
+        likes = np.loadtxt(likespath)
+        print chain.shape, sampler.flatchain.shape
+        np.savetxt(chainpath, np.concatenate((chain, sampler.flatchain), axis=0))
+        np.savetxt(likespath, np.concatenate((likes, sampler.flatlnprobability), axis=0))
     return 0
 
 if __name__ == '__main__':
@@ -74,15 +81,15 @@ if __name__ == '__main__':
         covname = "JK"
     basesuffix = name+"_"+covname+"_z%d_l%d"    
     bestfitbase = "bestfits/bf_%s.txt"%basesuffix
-    chainbase   = "chains/chain_%s.txt"%basesuffix
-    likesbase   = "chains/likes_%s.txt"%basesuffix
+    chainbase   = "chains/chain_%s_%s.txt"%(model_name, basesuffix)
+    likesbase   = "chains/likes %s_%s.txt"%(model_name, basesuffix)
 
     import matplotlib.pyplot as plt
     #Loop over bins
     for i in xrange(2, -1, -1): #z bins
         if i > 2: continue
-        for j in xrange(2, -1, -1): #lambda bins
-            if j > 6 or j < 0: continue
+        for j in xrange(6, -1, -1): #lambda bins
+            if j > 6 or j < 6: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             z    = zs[i,j]
             lam  = lams[i,j]
@@ -112,8 +119,8 @@ if __name__ == '__main__':
             args = {"z":z, "lam":lam, "Rlam":Rlam, "Rdata":Rdata, "ds":ds, "cov":cov, "icov":icov, "Rb":Rb, "Bp1":Bp1, "Bcov":Bcov, "iBcov":iBcov, "k":k, "Plin":Plin, "Pnl":Pnl, "Rmodel":Rmodel, "xi_mm":xi_mm, "Redges":Redges, "inds":inds, "Am_prior":Am_prior, "Am_prior_var":Am_prior_var, "sigma_crit_inv":sigma_crit_inv, "blinding_factor":blinding_factor, "model_name":model_name}
 
             #Flow control for whatever you want to do
-            test_call(args)
-            find_best_fit(args, bfpath, usey1)
+            #test_call(args)
+            #find_best_fit(args, bfpath, usey1)
             args["model_name"]=model_name #Reset this
-            test_call(args, bfpath=bfpath, testbf=True)
-            #do_mcmc(args, bfpath, chainpath, likespath, usey1)
+            #test_call(args, bfpath=bfpath, testbf=True)
+            do_mcmc(args, bfpath, chainpath, likespath, usey1)#, new_chain=False)

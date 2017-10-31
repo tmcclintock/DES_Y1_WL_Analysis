@@ -7,8 +7,9 @@ from scipy.interpolate import interp2d
 #Are we using jackknifes?
 use_JK = True
 
+fullbase = "/home/tmcclintock/Desktop/des_wl_work"
 #Y1 paths
-y1base = "/Users/tmcclintock/Data/DATA_FILES/y1_data_files/"
+y1base = fullbase+"/DATA_FILES/y1_data_files/"
 y1base2 = y1base+"FINAL_FILES/"
 y1database     = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_profile.dat"
 y1JKcovbase      = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_dst_cov.dat"
@@ -21,7 +22,7 @@ y1boostcovbase = y1base+"FINAL_FILES/full-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_c
 y1zspath   = y1base+"Y1_meanz.txt"
 y1lamspath = y1base+"Y1_meanl.txt"
 #SV paths
-svbase = "/Users/tmcclintock/Data/DATA_FILES/sv_data_files/"
+svbase = fullbase+"/DATA_FILES/sv_data_files/"
 svdatabase = svbase+"profile_z%d_l%d.dat"
 svcovbase  = svbase+"cov_t_z%d_l%d.dat"
 svboostbase = svbase+"SV_boost_factors.txt"
@@ -171,12 +172,12 @@ def get_model_start(model_name, lam, h):
     return guess
 
 def get_mcmc_start(model, model_name):
-    lM, c, tau, fmis, Am, B0, Rs, sigb = model
+    lM, c, tau, fmis, Am, B0, Rs = model
     if model_name is "full":
         return model
     elif model_name is "Mc":
         return [lM, c]
-    elif model_name is "Mfree":
+    elif model_name is "M":
         return [lM,]
     
 def get_cosmo_default():

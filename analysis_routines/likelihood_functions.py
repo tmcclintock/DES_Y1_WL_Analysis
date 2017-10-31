@@ -47,7 +47,10 @@ def lnprob(params, args):
     model_name = args['model_name']
     Am_prior = args['Am_prior']
     Am_prior_var = args['Am_prior_var']
-    pars = model_swap(params, z, blinding_factor, model_name)
+    if 'bf_defaults' in args:
+        pars = model_swap(params, z, blinding_factor, model_name, args['bf_defaults'])
+    else:
+        pars = model_swap(params, z, blinding_factor, model_name)
     lpr = lnprior(pars, Am_prior, Am_prior_var)
     if not np.isfinite(lpr): return -np.inf
     return lpr + lnlike(pars, args)
