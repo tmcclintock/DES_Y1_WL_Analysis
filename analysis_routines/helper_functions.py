@@ -4,9 +4,6 @@ This file contains functions used to make the analysis script easier to read. Th
 import numpy as np
 from scipy.interpolate import interp2d
 
-#Are we using jackknifes?
-use_JK = True
-
 fullbase = "/home/tmcclintock/Desktop/des_wl_work"
 #Y1 paths
 y1base = fullbase+"/DATA_FILES/y1_data_files/"
@@ -82,7 +79,8 @@ def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=F
     cov = cov[indices]
     cov = cov[:,indices]
     #APPLY THE HARTLAP CORRECTION HERE
-    if use_JK:
+    if useJK:
+        print "Hartlap applied"
         Njk = 100.
         D = len(R)
         cov = cov*((Njk-1.)/(Njk-D-2))

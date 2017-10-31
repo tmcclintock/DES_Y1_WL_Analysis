@@ -87,7 +87,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     #Loop over bins
     for i in xrange(2, -1, -1): #z bins
-        if i > 2: continue
+        if i < 2: continue
         for j in xrange(6, -1, -1): #lambda bins
             if j > 6 or j < 6: continue
             print "Working at z%d l%d for %s"%(i,j,name)
