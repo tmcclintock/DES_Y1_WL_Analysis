@@ -76,8 +76,8 @@ def plot_DS_in_bin(params, args, i, j):
     X = (ds- aDS)[good]
     cov = cov[good]
     cov = cov[:, good]
-    chi2 = np.dot(X, np.dot(np.linalg.inv(cov), X))
-    N = len(X)
+    chi2ds = np.dot(X, np.dot(np.linalg.inv(cov), X))
+    Nds = len(X)
 
     gs = gridspec.GridSpec(3, 6)
     axarr = [plt.subplot(gs[0:2, 0:3]), plt.subplot(gs[0:2, 3:]), plt.subplot(gs[-1, 0:3]), plt.subplot(gs[-1, 3:])]
@@ -117,8 +117,8 @@ def plot_DS_in_bin(params, args, i, j):
     X = (Bp1 - boost_Rb)[good]
     Bcov = Bcov[good]
     Bcov = Bcov[:, good]
-    chi2 += np.dot(X, np.dot(np.linalg.inv(Bcov), X))
-    N += len(X)
+    chi2b = np.dot(X, np.dot(np.linalg.inv(Bcov), X))
+    Nb = len(X)
     
     pd = (Bp1 - boost_Rb)/(boost_Rb-1)
     pde = Berr/(boost_Rb-1)
@@ -146,7 +146,10 @@ def plot_DS_in_bin(params, args, i, j):
     else: zlabel, llabel = svzlabels[i], svllabels[j]
     axarr[1].text(.8, 1.65, zlabel, fontsize=18)
     axarr[1].text(.8, 1.5,  llabel, fontsize=18)
-    axarr[1].text(.8, 1.35, r"$\chi^2=%.1f/%d$"%(chi2, N), fontsize=18)
+    axarr[1].text(.8, 1.35, r"$\chi^2_{b}=%.1f/%d$"%(chi2b, Nb), fontsize=18)
+    axarr[0].text(.2, 1., r"$\chi^2_{\Delta\Sigma}=%.1f/%d$"%(chi2ds, Nds), fontsize=18)
+    axarr[1].text(.8, 1.23, r"$\chi^2=%.1f/%d$"%(chi2ds+chi2b, Nds+Nb), fontsize=18)
+
     #plt.suptitle("%s %s"%(zlabel, llabel))
     plt.gcf().savefig("figures/fourpanel_z%d_l%d.png"%(i,j))
     #plt.show()
@@ -174,9 +177,9 @@ if __name__ == '__main__':
 
     #Loop over bins
     for i in xrange(2, -1, -1): #z bins
-        if i > 2: continue
-        for j in xrange(2, -1, -1): #lambda bins
-            if j > 2 or j < 0: continue
+        if i <0: continue
+        for j in xrange(6, -1, -1): #lambda bins
+            if j > 6 or j < 0: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             #Read in everything
             z    = zs[i,j]
