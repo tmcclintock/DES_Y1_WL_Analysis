@@ -9,7 +9,7 @@ Blinding_amp, lam_exp, z_exp = blinding.get_blinding_variables()
 cosmo = get_cosmo_default()
 h = cosmo['h'] #Hubble constant
 
-model_name = "M" #Mc, full, Afixed, cfixed
+model_name = "full" #Mc, full, Afixed, cfixed
 
 def test_call(args, bfpath=None, testbf=False):
     lam = args['lam']
@@ -39,7 +39,7 @@ def find_best_fit(args, bestfitpath, usey1):
     return 
 
 def do_mcmc(args, bfpath, chainpath, likespath, usey1, new_chain=True):
-    nwalkers, nsteps = 32, 5000
+    nwalkers, nsteps = 32, 3000
     import emcee
     model_name = args['model_name']
     bfmodel = np.loadtxt(bfpath) #Has everything
@@ -65,7 +65,7 @@ def do_mcmc(args, bfpath, chainpath, likespath, usey1, new_chain=True):
 if __name__ == '__main__':
     usey1 = True
     blinded = True
-    useJK = True
+    useJK = False
     zs, lams = get_zs_and_lams(usey1 = usey1)
     Rlams = (lams/100.0)**0.2 #Mpc/h; richness radius
     SCIs = get_sigma_crit_inverses(usey1)
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     #Loop over bins
     for i in xrange(2, -1, -1): #z bins
-        if i > 1: continue
+        if i <2: continue
         for j in xrange(6, -1, -1): #lambda bins
             if j > 6 or j < 6: continue
             print "Working at z%d l%d for %s"%(i,j,name)
@@ -101,7 +101,7 @@ if __name__ == '__main__':
             #Xi_mm MUST be evaluated to higher than BAO for correct accuracy
 
             #Note: convert Rlam to Mpc physical when we specificy the cuts
-            Rdata, ds, icov, cov, inds = get_data_and_icov(i, j, usey1=usey1)
+            Rdata, ds, icov, cov, inds = get_data_and_icov(i, j, usey1=usey1, useJK=useJK)
 
             Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, usey1=usey1)#, diag_only=True)#, alldata=True)
             bfpath    = bestfitbase%(i, j)
@@ -119,8 +119,8 @@ if __name__ == '__main__':
             args = {"z":z, "lam":lam, "Rlam":Rlam, "Rdata":Rdata, "ds":ds, "cov":cov, "icov":icov, "Rb":Rb, "Bp1":Bp1, "Bcov":Bcov, "iBcov":iBcov, "k":k, "Plin":Plin, "Pnl":Pnl, "Rmodel":Rmodel, "xi_mm":xi_mm, "Redges":Redges, "inds":inds, "Am_prior":Am_prior, "Am_prior_var":Am_prior_var, "sigma_crit_inv":sigma_crit_inv, "blinding_factor":blinding_factor, "model_name":model_name}
 
             #Flow control for whatever you want to do
-            #test_call(args)
+            test_call(args)
             #find_best_fit(args, bfpath, usey1)
             args["model_name"]=model_name #Reset this
-            #test_call(args, bfpath=bfpath, testbf=True)
+            test_call(args, bfpath=bfpath, testbf=True)
             do_mcmc(args, bfpath, chainpath, likespath, usey1)#, new_chain=False)

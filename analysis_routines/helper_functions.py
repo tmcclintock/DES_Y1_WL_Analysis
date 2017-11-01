@@ -84,6 +84,7 @@ def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=F
         Njk = 100.
         D = len(R)
         cov = cov*((Njk-1.)/(Njk-D-2))
+    else: print "Using SACs"
     return R, ds, np.linalg.inv(cov), cov, indices
 
 def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=False, diag_only=False):
@@ -109,6 +110,9 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alld
         Be  = Be[indices]
         Bcov = Bcov[indices]
         Bcov = Bcov[:,indices]
+        Njk = 100.
+        D = len(Rb)
+        Bcov = Bcov*((Njk-1.)/(Njk-D-2)) #Hartlap correction
         if diag_only: Bcov = np.diag(Be**2)
         #Note: the boost factors don't have the same number of radial bins
         #as deltasigma. This doesn't matter, because all we do is
