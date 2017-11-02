@@ -53,6 +53,41 @@ def fix_errorbars(ds, err):
     errout[0,bad] = ds[bad]-1e-2
     return errout
 
+def plot_boost_and_resid(params, args, i, j):
+    Lm, c, tau, fmis, Am, B0, Rs, sigb = params
+    Rdata = args['Rdata']
+    cuts = args['cuts']
+    cov = args['cov']
+    z = args['z']
+    lo,hi = cuts
+    Rb = args['Rb']
+    Bp1 = args['Bp1']
+    Bcov = args['Bcov']
+    Berr = np.sqrt(np.diag(Bcov))
+    Rmodel, DSfull, DSc, DSm, boost, aDS = calc_DS_model(params, args)
+    boost_Rb = get_boost_model(B0, Rs*(h*(1+z)), Rb)
+    good = (lo<Rb)*(Rb<hi)
+    bad  = (lo>Rb)+(Rb>hi)
+    fig, axarr = plt.subplots(2, sharex=True)
+    axarr[0].errorbar(Rb[good], Bp1[good], Berr[good], c='k', marker='o', ls='', markersize=3, zorder=1)
+    axarr[0].errorbar(Rb[bad], Bp1[bad], Berr[bad], c='k', marker='o', ls='', markersize=3, zorder=1, mfc='w')
+    axarr[0].plot(Rmodel, boost, c='r')
+    axarr[0].axhline(1, ls='-', c='k')
+    axarr[0].set_yticklabels([])
+    axarr[0].get_yaxis().set_visible(False)
+    axarr[0].set_ylim(.9, 1.8)
+    axarr[0].set_ylabel(r"$(1-f_{\rm cl})^{-1}$")
+
+    pd = (Bp1 - boost_Rb)#/(boost_Rb)
+    pde = Berr/boost_Rb
+    axarr[1].errorbar(Rb[good], pd[good], pde[good], c='k', marker='o', ls='', markersize=3, zorder=1)
+    axarr[1].errorbar(Rb[bad], pd[bad], pde[bad], c='k', marker='o', mfc='w', markersize=3, ls='', zorder=1)
+    axarr[1].axhline(0, ls='-', c='k')
+    axarr[1].set_xscale('log')
+    plt.xlim(0.1, 30.)
+    plt.show()
+
+
 def plot_just_DS(params, args, i, j):
     lM, c, tau, fmis, Am, B0, Rs, sigb = params
     Rdata = args['Rdata']
@@ -147,7 +182,7 @@ def plot_fourpanels(params, args, i, j):
     axarr[1].get_yaxis().set_visible(False)
     axarr[1].set_ylim(.9, 1.8)
     axtwin = axarr[1].twinx()
-    axtwin.set_ylabel(r"$1-f_{\rm cl}$")
+    axtwin.set_ylabel(r"$(1-f_{\rm cl})^{-1}$")
     axtwin.set_ylim(axarr[1].get_ylim())
 
     X = (Bp1 - boost_Rb)[good]
@@ -156,22 +191,26 @@ def plot_fourpanels(params, args, i, j):
     chi2b = np.dot(X, np.dot(np.linalg.inv(Bcov), X))
     Nb = len(X)
     
-    pd = (Bp1 - boost_Rb)/(boost_Rb-1)
-    pde = Berr/(boost_Rb-1)
+    pd = (Bp1 - boost_Rb)/boost_Rb#(boost_Rb-1)
+    pde = Berr/boost_Rb
     axarr[3].errorbar(Rb[good], pd[good], pde[good], c='k', marker='o', ls='', markersize=3, zorder=1)
     axarr[3].errorbar(Rb[bad], pd[bad], pde[bad], c='k', marker='o', mfc='w', markersize=3, ls='', zorder=1)
     axarr[3].axhline(0, ls='-', c='k')
-    axarr[3].set_yticklabels([])
 
     ylim = 1.2
     axarr[2].set_ylim(-ylim, ylim)
+    ylim = 0.06
     axarr[3].set_ylim(-ylim, ylim)
+    axarr[3].set_yticklabels([])
+    axtwin2 = axarr[3].twinx()
+    axtwin2.set_ylim(-ylim, ylim)
+    axtwin2.set_ylabel(r"$\frac{(1-f_{\rm cl})^{-1}-\mathcal{B}}{\mathcal{B}}$")
 
     #axarr[2].set_ylabel(r"\% Diff")#, fontsize=14)
-    axarr[2].set_ylabel(r"${\rm \frac{Data-Model}{Model}}$")
+    #axarr[2].set_ylabel(r"${\rm \frac{Data-Model}{Model}}$")
+    axarr[2].set_ylabel(r"${\rm \frac{\Delta\Sigma-\Delta\Sigma_{Model}}{\Delta\Sigma_{Model}}}$")
     axarr[2].set_xlabel(Rlabel)
     axarr[3].set_xlabel(Rlabel)    
-    plt.subplots_adjust(hspace=0.0, wspace=0.0, bottom=0.15, left=0.17, right=0.87)
     axarr[0].set_ylim(0.1, 1e3)
     for axinds in range(4):
         axarr[axinds].set_xscale('log')        
@@ -181,12 +220,14 @@ def plot_fourpanels(params, args, i, j):
     axarr[3].set_xticks([1, 10])
     if usey1: zlabel, llabel = y1zlabels[i], y1llabels[j]
     else: zlabel, llabel = svzlabels[i], svllabels[j]
-    axarr[1].text(.8, 1.65, zlabel, fontsize=18)
-    axarr[1].text(.8, 1.5,  llabel, fontsize=18)
-    axarr[1].text(.8, 1.35, r"$\chi^2_{\rm b}=%.1f/%d$"%(chi2b, Nb), fontsize=18)
-    axarr[0].text(.2, 1., r"$\chi^2_{\Delta\Sigma}=%.1f/%d$"%(chi2ds, Nds), fontsize=18)
-    axarr[1].text(.8, 1.23, r"$\chi^2=%.1f/%d$"%(chi2ds+chi2b, Nds+Nb), fontsize=18)
+    labelfontsize=16
+    axarr[1].text(.8, 1.65, zlabel, fontsize=labelfontsize)
+    axarr[1].text(.8, 1.5,  llabel, fontsize=labelfontsize)
+    axarr[1].text(.8, 1.35, r"$\chi^2_{\rm \mathcal{B}}=%.1f/%d$"%(chi2b, Nb), fontsize=labelfontsize)
+    axarr[0].text(.2, .6, r"$\chi^2_{\Delta\Sigma}=%.1f/%d$"%(chi2ds, Nds), fontsize=labelfontsize)
+    axarr[1].text(.8, 1.23, r"$\chi^2=%.1f/%d$"%(chi2ds+chi2b, Nds+Nb), fontsize=labelfontsize)
 
+    plt.subplots_adjust(hspace=0.0, wspace=0.0, bottom=0.15, left=0.17, right=0.80)
     #plt.suptitle("%s %s"%(zlabel, llabel))
     plt.gcf().savefig("figures/fourpanel_z%d_l%d.png"%(i,j))
     plt.show()
@@ -245,5 +286,6 @@ if __name__ == '__main__':
 
             params = np.loadtxt(bestfitbase%(i,j))
             params = model_swap(params, z, blinding_factor, "full")
-            plot_just_DS(params, args, i, j)
-            #plot_fourpanels(params, args, i, j)
+            #plot_just_DS(params, args, i, j)
+            #plot_boost_and_resid(params, args, i, j)
+            plot_fourpanels(params, args, i, j)
