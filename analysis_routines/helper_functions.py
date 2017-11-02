@@ -4,7 +4,8 @@ This file contains functions used to make the analysis script easier to read. Th
 import numpy as np
 from scipy.interpolate import interp2d
 
-fullbase = "/home/tmcclintock/Desktop/des_wl_work"
+fullbase = "/home/tmcclintock/Desktop/des_wl_work" #susie
+fullbase = "/Users/tmcclintock/Data" #laptop
 #Y1 paths
 y1base = fullbase+"/DATA_FILES/y1_data_files/"
 y1base2 = y1base+"FINAL_FILES/"
@@ -199,9 +200,10 @@ def get_Am_prior(zi, lj):
     deltap1_var = np.loadtxt("../photoz_calibration/Y1_deltap1_var.txt")[zi, lj]
     #Shear calibration m
     m = 0.012
-    m_var = 0.013
+    m_var = 0.013**2
     Am_prior = deltap1 + m
     Am_prior_var = deltap1_var + m_var
+    print zi, lj, deltap1_var, m_var
     return Am_prior, Am_prior_var
 
 def get_Redges(usey1):
