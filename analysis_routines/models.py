@@ -33,16 +33,7 @@ def model_swap(params, z, blinding_factor, name, bf_defaults=None):
         c = conc_spline(10**(lM-blinding_factor), z)
     return [lM-blinding_factor, c, tau, fmis, Am, B0, Rs, sigb]
 
-#Boost factor model
-def get_boost_model(b0, Rs, R):
-    x = R/Rs #Assume that R ans Rs are same units
-    i1 = np.where(x<1)[0]
-    i2 = np.where(x>1)[0]
-    Fx = np.ones_like(x)
-    Fx[i2] *=  np.arctan(np.sqrt(x[i2]**2-1))/np.sqrt(x[i2]**2-1)
-    Fx[i1] *= np.arctanh(np.sqrt(1-x[i1]**2))/np.sqrt(1-x[i1]**2)
-    return 1.0 + b0 * (1-Fx)/(x**2-1)
-
+#Boost factor variance model
 def boost_variance_model(sigma, R):
     return (sigma/R)**2 #R is in Mpc, pivot is 1 Mpc
 
@@ -72,7 +63,8 @@ def get_delta_sigma(params, args):
     full_DeltaSigma = (1-fmis)*DeltaSigma + fmis*DeltaSigma_mis
     full_DeltaSigma *= Am #multiplicative bias
     #Note: Rs is default in Mpc physical
-    boost_model = get_boost_model(B0, Rs*(h*(1+z)), Rp)
+    boost_model = clusterwl.boostfactors.boost_nfw_at_R(Rp, B0, Rs*h*(1+z))
+
     full_DeltaSigma /= boost_model #de-boost the model
     full_DeltaSigma /= (1-full_Sigma*sigma_crit_inv) #Reduced shear
     
