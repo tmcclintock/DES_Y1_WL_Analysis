@@ -4,8 +4,9 @@ This file contains functions used to make the analysis script easier to read. Th
 import numpy as np
 from scipy.interpolate import interp2d
 
-fullbase = "/home/tmcclintock/Desktop/des_wl_work" #susie
-fullbase = "/Users/tmcclintock/Data" #laptop
+#fullbase = "/home/tmcclintock/Desktop/des_wl_work" #susie
+#fullbase = "/Users/tmcclintock/Data" #laptop
+fullbase = "/calvin1/tmcclintock/DES_DATA_FILES"
 #Y1 paths
 y1base = fullbase+"/DATA_FILES/y1_data_files/"
 y1base2 = y1base+"FINAL_FILES/"
