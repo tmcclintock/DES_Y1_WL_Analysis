@@ -85,6 +85,8 @@ def plot_boost_and_resid(params, args, i, j):
     axarr[1].axhline(0, ls='-', c='k')
     axarr[1].set_xscale('log')
     plt.xlim(0.1, 30.)
+    axarr[1].set_ylabel(r"$\frac{(1-f_{\rm cl})^{-1}-\mathcal{B}}{\mathcal{B}}$")
+    plt.gcf().savefig("figures/boostfactor_z%d_l%d.pdf"%(i,j))
     plt.show()
 
 
@@ -122,7 +124,7 @@ def plot_just_DS(params, args, i, j):
     plt.text(3, 3e2, zlabel, fontsize=18)
     plt.text(3, 1e2,  llabel, fontsize=18)
     plt.subplots_adjust(bottom=0.15, left=0.18)
-    plt.gcf().savefig("figures/deltasigma_z%d_l%d.png"%(i,j))
+    plt.gcf().savefig("figures/deltasigma_z%d_l%d.pdf"%(i,j))
     plt.show()
 
 def plot_fourpanels(params, args, i, j):
@@ -229,7 +231,7 @@ def plot_fourpanels(params, args, i, j):
 
     plt.subplots_adjust(hspace=0.0, wspace=0.0, bottom=0.15, left=0.17, right=0.80)
     #plt.suptitle("%s %s"%(zlabel, llabel))
-    plt.gcf().savefig("figures/fourpanel_z%d_l%d.png"%(i,j))
+    plt.gcf().savefig("figures/fourpanel_z%d_l%d.pdf"%(i,j))
     plt.show()
     plt.clf()
     #plt.close()
@@ -287,5 +289,5 @@ if __name__ == '__main__':
             params = np.loadtxt(bestfitbase%(i,j))
             params = model_swap(params, z, blinding_factor, "full")
             #plot_just_DS(params, args, i, j)
-            #plot_boost_and_resid(params, args, i, j)
-            plot_fourpanels(params, args, i, j)
+            plot_boost_and_resid(params, args, i, j)
+            #plot_fourpanels(params, args, i, j)
