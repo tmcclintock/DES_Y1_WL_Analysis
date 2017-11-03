@@ -8,6 +8,7 @@ import numpy as np
 import os, sys
 import helper_functions as hf
 from models import *
+import clusterwl
 cosmo = hf.get_cosmo_default()
 h = cosmo['h']
 
@@ -36,7 +37,7 @@ def lnlike(params, args):
     Bp1 = args['Bp1']
     iBcov = args['iBcov']
     Berr = np.sqrt(np.diag(args['Bcov']))
-    boost_model = get_boost_model(B0, Rs, Rb)
+    boost_model = clusterwl.boostfactors.boost_nfw_at_R(Rb, B0, Rs)
     Xb = Bp1 - boost_model
     LLboost = -0.5*np.dot(Xb, np.dot(iBcov, Xb))
     return LLDS + LLboost
