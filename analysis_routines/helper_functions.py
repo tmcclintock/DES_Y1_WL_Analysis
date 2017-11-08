@@ -161,7 +161,7 @@ def get_model_start(model_name, lam, h):
     defaults = get_model_defaults(h)
     #M is in Msun/h
     lM_guess = defaults['lM']+np.log(lam/30.)*1.12/np.log(10)
-    if model_name is "full":
+    if model_name == "full":
         guess = [lM_guess,
                  defaults['conc'],
                  defaults['tau'],
@@ -169,9 +169,16 @@ def get_model_start(model_name, lam, h):
                  defaults['Am'],
                  defaults['B0'],
                  defaults['Rs']]
-    elif model_name is "Mc":
+    elif model_name == "Afixed":
+        guess = [lM_guess,
+                 defaults['conc'],
+                 defaults['tau'],
+                 defaults['fmis'], 
+                 defaults['B0'],
+                 defaults['Rs']]
+    elif model_name == "Mc":
         guess = [lM_guess, 4.5]
-    elif model_name is "M":
+    elif model_name == "M":
         guess = lM_guess
     return guess
 
