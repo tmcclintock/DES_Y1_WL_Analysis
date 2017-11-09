@@ -176,6 +176,13 @@ def get_model_start(model_name, lam, h):
                  defaults['fmis'], 
                  defaults['B0'],
                  defaults['Rs']]
+    elif model_name == "cfixed":
+        guess = [lM_guess,
+                 defaults['tau'],
+                 defaults['fmis'],
+                 defaults['Am'],
+                 defaults['B0'],
+                 defaults['Rs']]
     elif model_name == "Mc":
         guess = [lM_guess, 4.5]
     elif model_name == "M":
