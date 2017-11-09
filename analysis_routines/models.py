@@ -26,9 +26,15 @@ def model_swap(params, z, blinding_factor, name, bf_defaults=None):
         c, tau, fmis, Am, B0, Rs, sigb = [defaults['conc'], defaults['tau'], defaults['fmis'], defaults['Am'], defaults['B0'], defaults['Rs'], defaults['sig_b']]
     if name == "full":
         lM, c, tau, fmis, Am, B0, Rs = params
-    if name == "Mc":
+    elif name == "Afixed":
+        lM, c, tau, fmis, B0, Rs = params
+    elif name == "Mc":
         lM, c = params
-    if name == "M":
+    elif name == "cfixed":
+        lM, tau, fmis, Am, B0, Rs = params
+        c = conc_spline(10**(lM-blinding_factor), z)
+        print "here"
+    elif name == "M":
         lM = params
         c = conc_spline(10**(lM-blinding_factor), z)
     return [lM-blinding_factor, c, tau, fmis, Am, B0, Rs, sigb]
