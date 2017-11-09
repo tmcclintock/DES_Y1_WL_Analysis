@@ -33,7 +33,6 @@ def model_swap(params, z, blinding_factor, name, bf_defaults=None):
     elif name == "cfixed":
         lM, tau, fmis, Am, B0, Rs = params
         c = conc_spline(10**(lM-blinding_factor), z)
-        print "here"
     elif name == "M":
         lM = params
         c = conc_spline(10**(lM-blinding_factor), z)
