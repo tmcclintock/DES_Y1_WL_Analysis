@@ -6,15 +6,16 @@ import numpy as np
 import os, sys
 import helper_functions as hf
 import clusterwl
-cosmo = hf.get_cosmo_default()
+cal = True
+cosmo = hf.get_cosmo_default(cal)
 h = cosmo['h']
 om = cosmo['om']
-defaults = hf.get_model_defaults(0.7)
+defaults = hf.get_model_defaults(h)
 
 #R perpendicular
 Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h
 
-conc_spline = hf.get_concentration_spline()
+conc_spline = hf.get_concentration_spline(cal)
 
 #Swap between whatever model type we are working with and return
 #the parameters, including their default values.

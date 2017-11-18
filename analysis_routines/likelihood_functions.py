@@ -9,7 +9,8 @@ import os, sys
 import helper_functions as hf
 from models import *
 import clusterwl
-cosmo = hf.get_cosmo_default()
+cal = True
+cosmo = hf.get_cosmo_default(cal)
 h = cosmo['h']
 
 def lnprior(params, Am_prior, Am_prior_var):

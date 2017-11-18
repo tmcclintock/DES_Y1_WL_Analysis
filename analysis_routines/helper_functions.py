@@ -4,8 +4,8 @@ This file contains functions used to make the analysis script easier to read. Th
 import numpy as np
 from scipy.interpolate import interp2d
 
-fullbase = "/home/tmcclintock/Desktop/des_wl_work" #susie
-#fullbase = "/Users/tmcclintock/Data" #laptop
+#fullbase = "/home/tmcclintock/Desktop/des_wl_work" #susie
+fullbase = "/Users/tmcclintock/Data" #laptop
 #fullbase = "/calvin1/tmcclintock/DES_DATA_FILES" #calvin
 #Y1 paths
 y1base = fullbase+"/DATA_FILES/y1_data_files/"
@@ -30,6 +30,7 @@ svzspath   = svbase+"SV_meanz.txt"
 svlamspath = svbase+"SV_meanl.txt"
 
 #calibration paths
+zmap = np.array([0, 0, 1, 1]) #Maps zi to y1zi
 calbase = fullbase+"/DATA_FILES/calibration_data_files/"
 caldatabase = calbase+"cal_ps25_z%d_l%d.txt"
 calSACcovbase = y1SACcovbase
@@ -41,12 +42,12 @@ callamspath = calbase+"CAL_ps25_meanl.txt"
 #Sigma crit inverse path
 SCIpath = "../photoz_calibration/sigma_crit_inv.txt"
 
-h = 0.7
-om = 0.3
-
-def get_zs_and_lams(usey1):
+def get_zs_and_lams(usey1, cal=False):
     lams = get_lams(usey1)
     zs = get_zs(usey1)
+    if cal:
+        lams = np.genfromtxt(callamspath)
+        zs = np.genfromtxt(calzspath)
     return zs, lams
 
 def get_lams(usey1):
@@ -61,7 +62,12 @@ def get_sigma_crit_inverses(usey1):
     if usey1: return np.loadtxt(SCIpath)
     else: return np.zeros((3,5))
 
-def get_power_spectra(zi, lj, usey1):
+def get_power_spectra(zi, lj, usey1, cal=False):
+    if cal: #Use the calibration instead
+        k = np.genfromtxt(calbase+"P_files/k.txt")
+        Plin = np.genfromtxt(calbase+"P_files/plin_z%d.txt"%zi)
+        Pnl  = np.genfromtxt(calbase+"P_files/pnl_z%d.txt"%zi)
+        return k, Plin, Pnl
     if usey1: base = y1base
     else: base = svbase
     k    = np.genfromtxt(base+"P_files/k.txt")
@@ -69,7 +75,7 @@ def get_power_spectra(zi, lj, usey1):
     Pnl  = np.genfromtxt(base+"P_files/pnl_z%d_l%d.txt"%(zi, lj))
     return k, Plin, Pnl
     
-def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=False, useJK=True):
+def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=False, useJK=True, cal=False):
     #lowcut is the lower cutoff, assumed to be 0.2 Mpc physical
     #highcut might not be implemented in this analysis
     if usey1:
@@ -81,6 +87,10 @@ def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=F
         print "SV data z%d l%d"%(zi, lj)
         datapath = svdatabase%(zi, lj)
         covpath = svcovbase%(zi, lj)
+    if cal:
+        print "Calibration used instead z%d l%d"%(zi, lj)
+        datapath = caldatabase%(zi, lj)
+        covpath = calSACcovbase%(zmap[zi], lj)
     R, ds, dse, dsx, dsxe = np.genfromtxt(datapath, unpack=True)
     cov = np.genfromtxt(covpath)
     if zi == 0 and not usey1: highcut=21.5 #Just for z0 in SV
@@ -212,7 +222,7 @@ def get_mcmc_start(model, model_name):
     elif model_name is "M":
         return [lM,]
     
-def get_cosmo_default():
+def get_cosmo_default(cal=False):
     #The cosmology used in this analysis
     cosmo = {'h'      : 0.7,
              'om'     : 0.3,
@@ -221,6 +231,14 @@ def get_cosmo_default():
              'ok'     : 0.0,
              'sigma8' : 0.8,
              'ns'     : 0.96}
+    if cal: #fox cosmology
+        cosmo = {'h'      : 0.6704,
+                 'om'     : 0.318,
+                 'ode'    : 0.682,
+                 'ob'     : 0.049,
+                 'ok'     : 0.0,
+                 'sigma8' : 0.835,
+                 'ns'     : 0.962}
     return cosmo
 
 def get_Am_prior(zi, lj):
@@ -242,10 +260,11 @@ def get_Redges(usey1):
     else: return np.logspace(np.log10(0.02), np.log10(30.), num=Nbins+1) #use_sv
 
 #Set up the Concentration spline
-def get_concentration_spline():
+def get_concentration_spline(cal=False):
     from colossus.halo import concentration
     from colossus.cosmology import cosmology
-    cos = {'flat':True,'H0':h*100.,'Om0':om,'Ob0':0.05,'sigma8':0.8,'ns':0.96}
+    cosmo = get_cosmo_default(cal)
+    cos = {'flat':True,'H0':cosmo['h']*100.,'Om0':cosmo['om'],'Ob0':cosmo['ob'],'sigma8':cosmo['sigma8'],'ns':cosmo['ns']}
     cosmology.addCosmology('fiducial', cos)
     cosmology.setCosmology('fiducial')
     N = 20
