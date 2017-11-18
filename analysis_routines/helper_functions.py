@@ -28,6 +28,16 @@ svboostbase = svbase+"SV_boost_factors.txt"
 svboostcovbase = "need_z%d_l%d"
 svzspath   = svbase+"SV_meanz.txt"
 svlamspath = svbase+"SV_meanl.txt"
+
+#calibration paths
+calbase = fullbase+"/DATA_FILES/calibration_data_files/"
+caldatabase = calbase+"cal_ps25_z%d_l%d.txt"
+calSACcovbase = y1SACcovbase
+calboostbase = y1boostbase
+calboostcovbase = y1boostcovbase
+calzspath = calbase+"CAL_meanz.txt"
+callamspath = calbase+"CAL_ps25_meanl.txt"
+
 #Sigma crit inverse path
 SCIpath = "../photoz_calibration/sigma_crit_inv.txt"
 
