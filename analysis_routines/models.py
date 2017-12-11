@@ -6,7 +6,7 @@ import numpy as np
 import os, sys
 import helper_functions as hf
 import clusterwl
-cal = True
+cal = hf.get_calTF()
 cosmo = hf.get_cosmo_default(cal)
 h = cosmo['h']
 om = cosmo['om']

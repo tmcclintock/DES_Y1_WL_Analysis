@@ -10,6 +10,7 @@ import os, sys
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import blinding
+import clusterwl
 Blinding_amp, lam_exp, z_exp = blinding.get_blinding_variables()
 
 plt.rc("text", usetex=True)
@@ -65,7 +66,7 @@ def plot_boost_and_resid(params, args, i, j):
     Bcov = args['Bcov']
     Berr = np.sqrt(np.diag(Bcov))
     Rmodel, DSfull, DSc, DSm, boost, aDS = calc_DS_model(params, args)
-    boost_Rb = get_boost_model(B0, Rs*(h*(1+z)), Rb)
+    boost_Rb = clusterwl.boostfactors.boost_nfw_at_R(Rb, B0, Rs*h*(1+z))
     good = (lo<Rb)*(Rb<hi)
     bad  = (lo>Rb)+(Rb>hi)
     fig, axarr = plt.subplots(2, sharex=True)
@@ -173,7 +174,7 @@ def plot_fourpanels(params, args, i, j):
     Bp1 = args['Bp1']
     Bcov = args['Bcov']
     Berr = np.sqrt(np.diag(Bcov))
-    boost_Rb = get_boost_model(B0, Rs*(h*(1+z)), Rb)
+    boost_Rb = clusterwl.boostfactors.boost_nfw_at_R(Rb, B0, Rs*h*(1+z))
     good = (lo<Rb)*(Rb<hi)
     bad  = (lo>Rb)+(Rb>hi)
     axarr[1].errorbar(Rb[good], Bp1[good], Berr[good], c='k', marker='o', ls='', markersize=3, zorder=1)
@@ -289,5 +290,5 @@ if __name__ == '__main__':
             params = np.loadtxt(bestfitbase%(i,j))
             params = model_swap(params, z, blinding_factor, "full")
             #plot_just_DS(params, args, i, j)
-            plot_boost_and_resid(params, args, i, j)
-            #plot_fourpanels(params, args, i, j)
+            #plot_boost_and_resid(params, args, i, j)
+            plot_fourpanels(params, args, i, j)

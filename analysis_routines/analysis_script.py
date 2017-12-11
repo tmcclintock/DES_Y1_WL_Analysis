@@ -6,8 +6,8 @@ import sys
 import clusterwl #Used to get xi_mm(R) from P(k)
 import blinding
 Blinding_amp, lam_exp, z_exp = blinding.get_blinding_variables()
-cal = True
-zmap = np.array([0, 0, 1, 1]) #Maps zi to y1zi for the calibration
+cal = get_calTF() #True if we are using the calibration
+zmap = get_zmap() #Maps zi to y1zi for the calibration
 cosmo = get_cosmo_default(cal)
 h = cosmo['h'] #Hubble constant
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     for i in xrange(3, -1, -1): #z bins #only 2,1,0 for y1 and sv but 3,2,1,0 for cal
         if i <3: continue
         for j in xrange(6, -1, -1): #lambda bins
-            if j > 6 or j < 6: continue
+            if j > 3 or j < 3: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             z    = zs[i,j]
             lam  = lams[i,j]
@@ -121,6 +121,7 @@ if __name__ == '__main__':
             else: Am_prior, Am_prior_var = get_Am_prior(i, j)
 
             #Group everything up for convenience
+            print "Redshift used for edges z=%.2f with h=%.2f"%(z,h)
             Redges = get_Redges(usey1 = usey1) * h*(1+z) #Mpc/h comoving
             blinding_factor = 0
             if blinded: blinding_factor = np.log10(Blinding_amp) +  np.log10((lam/30.0)**lam_exp) + np.log10(((1+z)/1.5)**z_exp)
@@ -130,7 +131,7 @@ if __name__ == '__main__':
 
             #Flow control for whatever you want to do
             test_call(args)
-            find_best_fit(args, bfpath, usey1)
+            #find_best_fit(args, bfpath, usey1)
             args["model_name"]=model_name #Reset this
             test_call(args, bfpath=bfpath, testbf=True)
             args["model_name"]=model_name #Reset this

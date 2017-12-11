@@ -30,7 +30,7 @@ svzspath   = svbase+"SV_meanz.txt"
 svlamspath = svbase+"SV_meanl.txt"
 
 #calibration paths
-zmap = np.array([0, 0, 1, 1]) #Maps zi to y1zi
+
 calbase = fullbase+"/DATA_FILES/calibration_data_files/"
 caldatabase = calbase+"cal_ps25_z%d_l%d.txt"
 calSACcovbase = y1SACcovbase
@@ -41,6 +41,14 @@ callamspath = calbase+"CAL_ps25_meanl.txt"
 
 #Sigma crit inverse path
 SCIpath = "../photoz_calibration/sigma_crit_inv.txt"
+
+def get_calTF():
+    #False if we aren't doing a calibration
+    return True
+def get_zmap():
+    return np.array([1, 1, 0, 0]) #Maps zi to y1zi
+
+zmap = get_zmap()
 
 def get_zs_and_lams(usey1, cal=False):
     lams = get_lams(usey1)
@@ -64,6 +72,7 @@ def get_sigma_crit_inverses(usey1):
 
 def get_power_spectra(zi, lj, usey1, cal=False):
     if cal: #Use the calibration instead
+        print "Using calibration P(k) zi=%d"%zi
         k = np.genfromtxt(calbase+"P_files/k.txt")
         Plin = np.genfromtxt(calbase+"P_files/plin_z%d.txt"%zi)
         Pnl  = np.genfromtxt(calbase+"P_files/pnl_z%d.txt"%zi)
@@ -88,7 +97,7 @@ def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=F
         datapath = svdatabase%(zi, lj)
         covpath = svcovbase%(zi, lj)
     if cal:
-        print "Calibration used instead z%d l%d"%(zi, lj)
+        print "Calibration used instead z%d l%d with zmap=%d"%(zi, lj, zmap[zi])
         datapath = caldatabase%(zi, lj)
         covpath = calSACcovbase%(zmap[zi], lj)
     R, ds, dse, dsx, dsxe = np.genfromtxt(datapath, unpack=True)
@@ -117,7 +126,7 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alld
         #bcovpath  = y1boostcovbase%(zi, lj) #TEMP
         Bcov = np.loadtxt(bcovpath)
         Rb, Bp1, Be = np.genfromtxt(boostpath, unpack=True)
-        print Rb.shape, Bp1.shape, Be.shape, Bcov.shape
+        print "Boost data shapes: ",Rb.shape, Bp1.shape, Be.shape, Bcov.shape
         Becut = Be > 1e-6
         Bp1 = Bp1[Becut]
         Rb  = Rb[Becut]
@@ -250,7 +259,7 @@ def get_Am_prior(zi, lj):
     m_var = 0.013**2
     Am_prior = deltap1 + m
     Am_prior_var = deltap1_var + m_var
-    print zi, lj, deltap1_var, m_var
+    print "Am prior: ", zi, lj, Am_prior, np.sqrt(Am_prior_var)
     return Am_prior, Am_prior_var
 
 def get_Redges(usey1):

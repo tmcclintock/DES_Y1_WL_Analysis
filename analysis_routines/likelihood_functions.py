@@ -9,7 +9,7 @@ import os, sys
 import helper_functions as hf
 from models import *
 import clusterwl
-cal = True
+cal = hf.get_calTF()
 cosmo = hf.get_cosmo_default(cal)
 h = cosmo['h']
 
