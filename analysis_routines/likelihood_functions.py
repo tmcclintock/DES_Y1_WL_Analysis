@@ -29,6 +29,8 @@ def lnlike(params, args):
     z = args['z']
     ds = args['ds']
     icov = args['icov']
+    #i,j = args['zi'], args['lj']
+    #np.savetxt("data_for_figure_z%d_l%d.txt"%(i,j), np.array([Rp, full_DeltaSigma]).T, header="Mpc/h hMsun/pc^2")
     ds_model = ave_DeltaSigma[inds]
     ds_model *= h*(1+z)**2 #convert to Msun/pc^2 physical
     X = ds - ds_model

@@ -1,3 +1,4 @@
+*.pdf
 # text files that shouldn't go on github
 photoz_calibration/*.txt
 photoz_calibration/*.dat

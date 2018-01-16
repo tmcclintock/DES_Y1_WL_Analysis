@@ -273,7 +273,7 @@ if __name__ == '__main__':
             k, Plin, Pnl = get_power_spectra(i, j, usey1=usey1)
 
             Rmodel = np.logspace(-2, 3, num=1000, base=10)
-            xi_mm = clusterwl.xi.xi_mm_at_R(Rmodel, k, Pnl)
+            xi_mm = clusterwl.xi.xi_mm_at_R(Rmodel, k, Pnl, N=500)
             #Xi_mm MUST be evaluated to higher than BAO for correct accuracy
             #Group everything up for convenience
             Redges = get_Redges(usey1 = usey1)*h*(1+z) #Mpc/h comoving

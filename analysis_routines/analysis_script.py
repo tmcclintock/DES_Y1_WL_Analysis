@@ -92,9 +92,9 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     #Loop over bins
     for i in xrange(3, -1, -1): #z bins #only 2,1,0 for y1 and sv but 3,2,1,0 for cal
-        if i <3: continue
+        if i >2: continue
         for j in xrange(6, -1, -1): #lambda bins
-            if j > 3 or j < 3: continue
+            if j > 6 or j < 3: continue
             print "Working at z%d l%d for %s"%(i,j,name)
             z    = zs[i,j]
             lam  = lams[i,j]
@@ -127,7 +127,7 @@ if __name__ == '__main__':
             if blinded: blinding_factor = np.log10(Blinding_amp) +  np.log10((lam/30.0)**lam_exp) + np.log10(((1+z)/1.5)**z_exp)
             if cal: blinding_factor*= 0
             
-            args = {"z":z, "lam":lam, "Rlam":Rlam, "Rdata":Rdata, "ds":ds, "cov":cov, "icov":icov, "Rb":Rb, "Bp1":Bp1, "Bcov":Bcov, "iBcov":iBcov, "k":k, "Plin":Plin, "Pnl":Pnl, "Rmodel":Rmodel, "xi_mm":xi_mm, "Redges":Redges, "inds":inds, "Am_prior":Am_prior, "Am_prior_var":Am_prior_var, "sigma_crit_inv":sigma_crit_inv, "blinding_factor":blinding_factor, "model_name":model_name}
+            args = {"z":z, "lam":lam, "Rlam":Rlam, "Rdata":Rdata, "ds":ds, "cov":cov, "icov":icov, "Rb":Rb, "Bp1":Bp1, "Bcov":Bcov, "iBcov":iBcov, "k":k, "Plin":Plin, "Pnl":Pnl, "Rmodel":Rmodel, "xi_mm":xi_mm, "Redges":Redges, "inds":inds, "Am_prior":Am_prior, "Am_prior_var":Am_prior_var, "sigma_crit_inv":sigma_crit_inv, "blinding_factor":blinding_factor, "model_name":model_name, "zi":i, "lj":j}
 
             #Flow control for whatever you want to do
             test_call(args)

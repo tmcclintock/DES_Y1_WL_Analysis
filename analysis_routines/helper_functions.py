@@ -44,7 +44,7 @@ SCIpath = "../photoz_calibration/sigma_crit_inv.txt"
 
 def get_calTF():
     #False if we aren't doing a calibration
-    return True
+    return False
 def get_zmap():
     return np.array([1, 1, 0, 0]) #Maps zi to y1zi
 
