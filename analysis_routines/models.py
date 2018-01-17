@@ -1,30 +1,18 @@
 """
-This file contains interfaces for the boost factor model and the
-DeltaSigma model.
+This file contains interfaces for the boost factor model and the DeltaSigma model.
 """
 import numpy as np
-import os, sys
-import helper_functions as hf
-import clusterwl
-cal = hf.get_calTF()
-cosmo = hf.get_cosmo_default(cal)
-h = cosmo['h']
-om = cosmo['om']
-defaults = hf.get_model_defaults(h)
+import cluster_toolkit as ct
 
 #R perpendicular
 Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h
 
-conc_spline = hf.get_concentration_spline(cal)
-
-#Swap between whatever model type we are working with and return
-#the parameters, including their default values.
-def model_swap(params, z, blinding_factor, name, bf_defaults=None):
-    if bf_defaults is not None:
-        lM0, c, tau, fmis, Am, B0, Rs = bf_defaults
-        sigb = defaults['sig_b'] #Not used in fits at this time
-    else:
-        c, tau, fmis, Am, B0, Rs, sigb = [defaults['conc'], defaults['tau'], defaults['fmis'], defaults['Am'], defaults['B0'], defaults['Rs'], defaults['sig_b']]
+def model_swap(params, args):
+    name = args['model_name']
+    z = args['z']
+    defaults = args['defaults']
+    blinding_factor = args['blinding_factor']
+    c, tau, fmis, Am, B0, Rs = [defaults['conc'], defaults['tau'], defaults['fmis'], defaults['Am'], defaults['B0'], defaults['Rs']]
     if name == "full":
         lM, c, tau, fmis, Am, B0, Rs = params
     elif name == "Afixed":
@@ -37,43 +25,46 @@ def model_swap(params, z, blinding_factor, name, bf_defaults=None):
     elif name == "M":
         lM = params
         c = conc_spline(10**(lM-blinding_factor), z)
-    return [lM-blinding_factor, c, tau, fmis, Am, B0, Rs, sigb]
-
-#Boost factor variance model
-def boost_variance_model(sigma, R):
-    return (sigma/R)**2 #R is in Mpc, pivot is 1 Mpc
+    return [lM-blinding_factor, c, tau, fmis, Am, B0, Rs]
 
 def get_delta_sigma(params, args):
-    lM, c, tau, fmis, Am, B0, Rs, sigb = params
-    Rmodel = args['Rmodel']
-    k = args['k']
-    Plin = args['Plin']
-    xi_mm = args['xi_mm']
-    Rlam = args['Rlam']
+    lM, c, tau, fmis, Am, B0, Rs = params
+    Rmodel = args['Rmodel'] #3d r; Mpc/h
+    k = args['k'] #h/Mpc
+    Plin = args['Plin'] #(Mpc/h)^3
+    xi_mm = args['xi_nl'] #can also choose xi_lin
+    Rlam = args['Rlam'] #Mpc/h
     z = args['z']
-    sigma_crit_inv = args['sigma_crit_inv']
-    Redges = args['Redges']
-    M = 10**lM
-    xi_nfw   = clusterwl.xi.xi_nfw_at_R(Rmodel, M, c, om)
-    bias = clusterwl.bias.bias_at_M(M, k, Plin, om)
-    xi_2halo = clusterwl.xi.xi_2halo(bias, xi_mm)
-    xi_hm    = clusterwl.xi.xi_hm(xi_nfw, xi_2halo)
+    h = args['h']
+    om = args['om']
+    sigma_crit_inv = args['sigma_crit_inv'] #pc^2/hMsun comoving
+    Redges = args['Redges'] #Mpc/h comoving
+    M = 10**lM #Msun/h
+    xi_nfw   = ct.xi.xi_nfw_at_R(Rmodel, M, c, om)
+    bias = ct.bias.bias_at_M(M, k, Plin, om)
+    xi_2halo = ct.xi.xi_2halo(bias, xi_mm)
+    xi_hm    = ct.xi.xi_hm(xi_nfw, xi_2halo)
     Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h
-    Sigma  = clusterwl.deltasigma.Sigma_at_R(Rp, Rmodel, xi_hm, M, c, om)
-    DeltaSigma = clusterwl.deltasigma.DeltaSigma_at_R(Rp, Rp, Sigma, M, c, om)
+    Sigma  = ct.deltasigma.Sigma_at_R(Rp, Rmodel, xi_hm, M, c, om)
+    DeltaSigma = ct.deltasigma.DeltaSigma_at_R(Rp, Rp, Sigma, M, c, om)
     Rmis = tau*Rlam #Mpc/h
-    Sigma_mis  = clusterwl.miscentering.Sigma_mis_at_R(Rp, Rp, Sigma, M, c, om, Rmis, kernel="exponential")
-    DeltaSigma_mis = clusterwl.miscentering.DeltaSigma_mis_at_R(Rp, Rp, Sigma_mis)
+    Sigma_mis  = ct.miscentering.Sigma_mis_at_R(Rp, Rp, Sigma, M, c, om, Rmis, kernel="exponential")
+    DeltaSigma_mis = ct.miscentering.DeltaSigma_mis_at_R(Rp, Rp, Sigma_mis)
 
     full_Sigma = (1-fmis)*Sigma + fmis*Sigma_mis
     full_DeltaSigma = (1-fmis)*DeltaSigma + fmis*DeltaSigma_mis
     full_DeltaSigma *= Am #multiplicative bias
     #Note: Rs is default in Mpc physical
-    boost_model = clusterwl.boostfactors.boost_nfw_at_R(Rp, B0, Rs*h*(1+z))
+    boost_model = ct.boostfactors.boost_nfw_at_R(Rp, B0, Rs*h*(1+z))
 
     full_DeltaSigma /= boost_model #de-boost the model
     full_DeltaSigma /= (1-full_Sigma*sigma_crit_inv) #Reduced shear
+    #Here, DeltaSigma is in Msun h/pc^2 comoving
     
-    ave_DeltaSigma = np.zeros((len(Redges)-1))
-    clusterwl.averaging.average_profile_in_bins(Redges, Rp, full_DeltaSigma, ave_DeltaSigma)
+    ave_DeltaSigma = ct.averaging.average_profile_in_bins(Redges, Rp, full_DeltaSigma)
     return Rp, Sigma, Sigma_mis, DeltaSigma, DeltaSigma_mis, full_DeltaSigma, ave_DeltaSigma, boost_model
+
+def get_boost_model(params, args):
+    lM, c, tau, fmis, Am, B0, Rs = params
+    Rb = args['Rb'] #Mpc physical
+    return ct.boostfactors.boost_nfw_at_R(Rb, B0, Rs)

@@ -1,21 +1,11 @@
 import numpy as np
 from likelihood_functions import *
 from helper_functions import *
-import models
-import sys
-import clusterwl #Used to get xi_mm(R) from P(k)
-import blinding
-Blinding_amp, lam_exp, z_exp = blinding.get_blinding_variables()
-cal = get_calTF() #True if we are using the calibration
-zmap = get_zmap() #Maps zi to y1zi for the calibration
-cosmo = get_cosmo_default(cal)
-h = cosmo['h'] #Hubble constant
-
-model_name = "full" #Mc, full, Afixed, cfixed
+import cluster_toolkit as ct
+import os, sys
 
 def test_call(args, bfpath=None, testbf=False):
-    lam = args['lam']
-    guess = get_model_start(model_name, lam, h)
+    guess = get_model_start(model_name, args['lam'], args['h'])
     if testbf:
         print "Testing bestfit"
         guess = np.loadtxt(bfpath) #Has everything
@@ -24,19 +14,18 @@ def test_call(args, bfpath=None, testbf=False):
     print ""
     return
 
-def find_best_fit(args, bestfitpath, usey1):
+def find_best_fit(args, bestfitpath):
     z = args['z']
     lam = args['lam']
-    args['model_name'] = "full" #always use full here
+    h = args['h']
     model_name = args['model_name']
-    blinding_factor = args['blinding_factor']
     guess = get_model_start(model_name, lam, h)
     import scipy.optimize as op
     nll = lambda *args: -lnprob(*args)
+    print "Running best fit"
     result = op.minimize(nll, guess, args=(args,), tol=1e-2)
     print "Best fit being saved at :\n%s"%bestfitpath
     print "\tsuccess = %s"%result['success']
-    #outmodel = models.model_swap(result['x'], z, blinding_factor, model_name)
     np.savetxt(bestfitpath, result['x'])
     return 
 
@@ -53,86 +42,36 @@ def do_mcmc(args, bfpath, chainpath, likespath, usey1, new_chain=True):
     print "Starting MCMC, saving to %s"%chainpath
     sampler.run_mcmc(pos, nsteps)
     print "MCMC complete"
-    if new_chain:
+    if os.path.isfile(chainpath):
+        np.savetxt(chainpath+".new", sampler.flatchain)
+        np.savetxt(likespath+".new", sampler.flatlnprobability)
+    else:
         np.savetxt(chainpath, sampler.flatchain)
         np.savetxt(likespath, sampler.flatlnprobability)
-    else: #add to old chain
-        chain = np.loadtxt(chainpath)
-        likes = np.loadtxt(likespath)
-        print chain.shape, sampler.flatchain.shape
-        np.savetxt(chainpath, np.concatenate((chain, sampler.flatchain), axis=0))
-        np.savetxt(likespath, np.concatenate((likes, sampler.flatlnprobability), axis=0))
     return 0
 
 if __name__ == '__main__':
-    usey1 = True
-    blinded = True
+    name = "cal"
+    model_name = "full" #Mc, full, Afixed, cfixed
+    blinded = False
+    cal = True
     useJK = False
-    zs, lams = get_zs_and_lams(usey1 = usey1, cal=cal)
-    Rlams = (lams/100.0)**0.2 #Mpc/h; richness radius
-    SCIs = get_sigma_crit_inverses(usey1)
 
-    #This specifies which analysis we are doing
-    #Name options are full, fixed, boostfixed or Afixed
-    if usey1: 
-        name = "y1"
-        if useJK: covname = "JK"
-        else: covname = "SAC"
-    else:
-        name = "sv"
-        covname = "JK"
-    if cal:
-        name = "cal"
-        covname = "SAC"
-    basesuffix = name+"_"+covname+"_z%d_l%d"    
-    bestfitbase = "bestfits/bf_%s.txt"%basesuffix
-    chainbase   = "chains/chain_%s_%s.txt"%(model_name, basesuffix)
-    likesbase   = "chains/likes_%s_%s.txt"%(model_name, basesuffix)
-
-    import matplotlib.pyplot as plt
     #Loop over bins
     for i in xrange(3, -1, -1): #z bins #only 2,1,0 for y1 and sv but 3,2,1,0 for cal
-        if i >2: continue
+        if i < 0 or i > 0 : continue
         for j in xrange(6, -1, -1): #lambda bins
-            if j > 6 or j < 3: continue
+            if j > 3 or j < 3: continue
+            paths, args = get_args_and_paths(name, i, j, model_name, blinded, cal, useJK)
+            bfpath, chainpath, likespath = paths
             print "Working at z%d l%d for %s"%(i,j,name)
-            z    = zs[i,j]
-            lam  = lams[i,j]
-            Rlam = Rlams[i,j]
-            print "z = %.2f lam = %.2f"%(z, lam)
-            if cal: sigma_crit_inv = SCIs[zmap[i],j]* h*(1+z)**2 #Convert to pc^2/hMsun comoving
-            else: sigma_crit_inv = SCIs[i,j]* h*(1+z)**2 #Convert to pc^2/hMsun comoving
-            k, Plin, Pnl = get_power_spectra(i, j, usey1, cal=cal)
-            Rmodel = np.logspace(-2, 3, num=1000, base=10) 
-            xi_mm = clusterwl.xi.xi_mm_at_R(Rmodel, k, Pnl)
-            #Xi_mm MUST be evaluated to higher than BAO for correct accuracy
-
-            #Note: convert Rlam to Mpc physical when we specificy the cuts
-            Rdata, ds, icov, cov, inds = get_data_and_icov(i, j, usey1=usey1, useJK=useJK, cal=cal)
-
-            if cal: Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zmap[i], j, usey1=usey1)
-            else: Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, usey1=usey1)
-            bfpath    = bestfitbase%(i, j)
-            chainpath = chainbase%(i, j)
-            likespath = likesbase%(i, j)
-
-            #Multiplicative prior
-            if cal: Am_prior, Am_prior_var = get_Am_prior(zmap[i], j)
-            else: Am_prior, Am_prior_var = get_Am_prior(i, j)
-
-            #Group everything up for convenience
-            print "Redshift used for edges z=%.2f with h=%.2f"%(z,h)
-            Redges = get_Redges(usey1 = usey1) * h*(1+z) #Mpc/h comoving
-            blinding_factor = 0
-            if blinded: blinding_factor = np.log10(Blinding_amp) +  np.log10((lam/30.0)**lam_exp) + np.log10(((1+z)/1.5)**z_exp)
-            if cal: blinding_factor*= 0
-            
-            args = {"z":z, "lam":lam, "Rlam":Rlam, "Rdata":Rdata, "ds":ds, "cov":cov, "icov":icov, "Rb":Rb, "Bp1":Bp1, "Bcov":Bcov, "iBcov":iBcov, "k":k, "Plin":Plin, "Pnl":Pnl, "Rmodel":Rmodel, "xi_mm":xi_mm, "Redges":Redges, "inds":inds, "Am_prior":Am_prior, "Am_prior_var":Am_prior_var, "sigma_crit_inv":sigma_crit_inv, "blinding_factor":blinding_factor, "model_name":model_name, "zi":i, "lj":j}
+            print "\tMean z:%f\n\tMean lambda:%f"%(args['z'], args['lam'])
+            print "Saving to:\n\t%s\n\t%s\n\t%s"%(bfpath, chainpath, likespath)
 
             #Flow control for whatever you want to do
             test_call(args)
-            #find_best_fit(args, bfpath, usey1)
-            args["model_name"]=model_name #Reset this
-            test_call(args, bfpath=bfpath, testbf=True)
-            args["model_name"]=model_name #Reset this
-            #do_mcmc(args, bfpath, chainpath, likespath, usey1)#, new_chain=False)
+            find_best_fit(args, bfpath)
+            #args["model_name"]=model_name #Reset this
+            #test_call(args, bfpath=bfpath, testbf=True)
+            #args["model_name"]=model_name #Reset this
+            #do_mcmc(args, bfpath, chainpath, likespath, usey1)#, new_chain=False))

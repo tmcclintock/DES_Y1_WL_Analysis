@@ -2,9 +2,7 @@
 This file contains functions used to make the analysis script easier to read. This includes file IO and loading various things.
 """
 import numpy as np
-import cluster_toolkit as ct
 from scipy.interpolate import interp2d
-import blinding
 
 #fullbase = "/home/tmcclintock/Desktop/des_wl_work" #susie
 fullbase = "/Users/tmcclintock/Data" #laptop
@@ -17,6 +15,8 @@ y1JKcovbase      = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_dst_cov.dat"
 y1SACcovbase     = y1base2+"SACs/SAC_z%d_l%d.txt"
 y1boostbase    = y1base+"FINAL_FILES/full-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"
 y1boostcovbase = y1base+"FINAL_FILES/full-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"
+#y1boostbase = y1base+"boost_files/redcurves/red_z%d_l%d.txt"
+#y1boostcovbase = y1base+"boost_files/redcurves/cov_z%d_l%d.txt"
 
 y1zspath   = y1base+"Y1_meanz.txt"
 y1lamspath = y1base+"Y1_meanl.txt"
@@ -41,60 +41,6 @@ callamspath = calbase+"CAL_ps25_meanl.txt"
 
 #Sigma crit inverse path
 SCIpath = "../photoz_calibration/sigma_crit_inv.txt"
-
-def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=False):
-    covname = "SAC"
-    zmap = None #Only used for calibration
-    if name == "y1" or name == "cal":
-        usey1 = True
-    else: #sv
-        usey1 = False
-    if useJK:
-        covname = "JK"
-    if name == "cal":
-        if not cal: raise Exception("'cal' must be True if doing calibration")
-        zmap = get_zmap() #Maps zi to y1zi for the calibration
-    if name != "cal" and cal:
-        raise Exception("'cal' specified but analysis is %s"%name)
-    cosmo = get_cosmo_default(cal)
-    h = cosmo['h']
-    om = cosmo['om']
-    defaults = get_model_defaults(h)
-    conc_spline = get_concentration_spline(cal)
-
-    #First fix the paths
-    basesuffix = name+"_"+covname+"_z%d_l%d"%(zi, lj)
-    bfpath = "bestfits/bf_%s_%s.txt"%(model_name, basesuffix)
-    chainpath   = "chains/chain_%s_%s.txt"%(model_name, basesuffix)
-    likespath   = "chains/likes_%s_%s.txt"%(model_name, basesuffix)
-    paths = [bfpath, chainpath, likespath]
-    
-    #Now prep the args
-    zs, lams = get_zs_and_lams(usey1, cal)
-    Rlams = (lams/100.)**0.2 #Mpc/h
-    SCIs = get_sigma_crit_inverses(usey1) #In pc^2/Msun physical
-    z, lam, Rlam = zs[zi, lj], lams[zi, lj], Rlams[zi, lj]
-    if cal: SCI = SCIs[zmap[zi], lj] * h*(1+z)**2
-    else: SCI = SCIs[zi, lj] * h*(1+z)**2 #Convert to pc^2/hMsun comoving
-    k, Plin, Pnl = get_power_spectra(zi, lj, usey1, cal)
-    Rmodel = np.logspace(-2, 3, num=1000, base=10) #Mpc/h comoving
-    xi_nl  = ct.xi.xi_mm_at_R(Rmodel, k, Pnl)
-    xi_lin = ct.xi.xi_mm_at_R(Rmodel, k, Plin)
-    Rdata, ds, icov, cov, inds = get_data_and_icov(zi, lj, usey1=usey1, useJK=useJK, cal=cal)
-    if cal: Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zmap[zi], lj, usey1=usey1)
-    else: Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zi, lj, usey1=usey1)
-    if cal: Am_prior, Am_prior_var = get_Am_prior(zmap[zi], lj)
-    else: Am_prior, Am_prior_var = get_Am_prior(zi, lj)
-    Redges = get_Redges(usey1 = usey1) * h*(1+z) #Mpc/h comoving
-    Blinding_amp, lam_exp, z_exp = blinding.get_blinding_variables()
-    blinding_factor = np.log10(Blinding_amp) +  np.log10((lam/30.0)**lam_exp) + np.log10(((1+z)/1.5)**z_exp)
-    if not blinded or cal:
-        blinding_factor*=0
-        print cal, h, covname, "Blinding factor:",blinding_factor
-    print "Doing cal:",cal, "Hubble:",h, "Omega_m:",om, "Covariance type:",covname
-    
-    args = {"z":z, "lam":lam, "Rlam":Rlam, "k":k, "Plin":Plin, "Pnl":Pnl, "Rmodel":Rmodel, "xi_nl":xi_nl, "xi_lin":xi_lin, "Rdata":Rdata, "ds":ds, "cov":cov, "icov":icov, "Rb":Rb, "Bp1":Bp1, "Bcov":Bcov, "iBcov":iBcov, "Redges":Redges, "inds":inds, "Am_prior":Am_prior, "Am_prior_var":Am_prior_var, "sigma_crit_inv":SCI, "model_name":model_name, "zi":zi, "lj":lj, "blinding_factor":blinding_factor, 'h':h, 'om':om, 'defaults':defaults, 'cspline':conc_spline}
-    return paths, args
 
 def get_calTF():
     #False if we aren't doing a calibration
@@ -338,10 +284,3 @@ def get_concentration_spline(cal=False):
         for j in range(N):
             c_array[j,i] = concentration.concentration(M[i],'200m',z=z[j],model='diemer15')
     return interp2d(M, z, c_array)
-
-if __name__ == "__main__":
-    model_name = "full"
-    zi = 0
-    lj = 3
-    get_args_and_paths("cal", zi, lj, model_name, cal=True)
-    get_args_and_paths("y1", zi, lj, model_name)
