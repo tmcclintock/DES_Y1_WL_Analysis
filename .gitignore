@@ -1,3 +1,6 @@
+boost_fitting/**/*.txt
+boost_fitting/**/*.png
+
 old_analysis_routines/bestfits
 old_analysis_routines/chains
 old_analysis_routines/figures

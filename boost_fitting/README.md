@@ -1,0 +1,1 @@
+Here I fit just the boost factors. This is so that I can save the posteriors of the parameters and use them in the calibration.

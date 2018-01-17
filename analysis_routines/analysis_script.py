@@ -10,8 +10,7 @@ def test_call(args, bfpath=None, testbf=False):
         print "Testing bestfit"
         guess = np.loadtxt(bfpath) #Has everything
         args['model_name'] = "full" #always use full here
-    print "Test call: lnprob(start) = ", lnprob(guess, args)
-    print ""
+    print "Test call: lnprob(start) = %.2e\n"%lnprob(guess, args)
     return
 
 def find_best_fit(args, bestfitpath):
@@ -24,7 +23,7 @@ def find_best_fit(args, bestfitpath):
     nll = lambda *args: -lnprob(*args)
     print "Running best fit"
     result = op.minimize(nll, guess, args=(args,), tol=1e-2)
-    print "Best fit being saved at :\n%s"%bestfitpath
+    print "Best fit being saved at :\n\t%s"%bestfitpath
     print "\tsuccess = %s"%result['success']
     np.savetxt(bestfitpath, result['x'])
     return 
@@ -48,7 +47,7 @@ def do_mcmc(args, bfpath, chainpath, likespath, usey1, new_chain=True):
     else:
         np.savetxt(chainpath, sampler.flatchain)
         np.savetxt(likespath, sampler.flatlnprobability)
-    return 0
+    return
 
 if __name__ == '__main__':
     name = "cal"
