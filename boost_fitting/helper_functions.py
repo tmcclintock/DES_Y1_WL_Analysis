@@ -5,8 +5,8 @@ fullbase = "/Users/tmcclintock/Data" #laptop
 #fullbase = "/calvin1/tmcclintock/DES_DATA_FILES" #calvin
 
 y1base = fullbase+"/DATA_FILES/y1_data_files/"
-y1boostbase    = y1base+"FINAL_FILES/full-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"
-y1boostcovbase = y1base+"FINAL_FILES/full-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"
+y1boostbase    = y1base+"FINAL_FILES/full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"
+y1boostcovbase = y1base+"FINAL_FILES/full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"
 
 svbase = fullbase+"/DATA_FILES/sv_data_files/"
 svboostbase = svbase+"SV_boost_factors.txt"

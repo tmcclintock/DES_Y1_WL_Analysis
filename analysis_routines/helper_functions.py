@@ -12,11 +12,11 @@ fullbase = "/Users/tmcclintock/Data" #laptop
 #Y1 paths
 y1base = fullbase+"/DATA_FILES/y1_data_files/"
 y1base2 = y1base+"FINAL_FILES/"
-y1database     = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_profile.dat"
+y1database     = y1base2+"full-unblind-v2-mcal-zmix_y1subtr_l%d_z%d_profile.dat"
 y1JKcovbase      = y1base2+"full-unblind-mcal-zmix_y1subtr_l%d_z%d_dst_cov.dat"
 y1SACcovbase     = y1base2+"SACs/SAC_z%d_l%d.txt"
-y1boostbase    = y1base+"FINAL_FILES/full-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"
-y1boostcovbase = y1base+"FINAL_FILES/full-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"
+y1boostbase    = y1base+"FINAL_FILES/full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"
+y1boostcovbase = y1base+"FINAL_FILES/full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"
 
 y1zspath   = y1base+"Y1_meanz.txt"
 y1lamspath = y1base+"Y1_meanl.txt"
@@ -73,16 +73,18 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
     zs, lams = get_zs_and_lams(usey1, cal)
     Rlams = (lams/100.)**0.2 #Mpc/h
     SCIs = get_sigma_crit_inverses(usey1) #In pc^2/Msun physical
+    print zs.shape, lams.shape, Rlams.shape
     z, lam, Rlam = zs[zi, lj], lams[zi, lj], Rlams[zi, lj]
     if cal: SCI = SCIs[zmap[zi], lj] * h*(1+z)**2
     else: SCI = SCIs[zi, lj] * h*(1+z)**2 #Convert to pc^2/hMsun comoving
     k, Plin, Pnl = get_power_spectra(zi, lj, usey1, cal)
     Rmodel = np.logspace(-2, 3, num=1000, base=10) #Mpc/h comoving
+    xi_nl2  = ct.xi.xi_mm_at_R(Rmodel, k, Pnl, N=200)
     xi_nl  = ct.xi.xi_mm_at_R(Rmodel, k, Pnl)
     xi_lin = ct.xi.xi_mm_at_R(Rmodel, k, Plin)
     Rdata, ds, icov, cov, inds = get_data_and_icov(zi, lj, usey1=usey1, useJK=useJK, cal=cal)
-    if cal: Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zmap[zi], lj, usey1=usey1)
-    else: Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zi, lj, usey1=usey1)
+    if cal: Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zmap[zi], lj, usey1=usey1, diag_only=True)
+    else: Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zi, lj, usey1=usey1, diag_only=True)
     if cal: Am_prior, Am_prior_var = get_Am_prior(zmap[zi], lj)
     else: Am_prior, Am_prior_var = get_Am_prior(zi, lj)
     Redges = get_Redges(usey1 = usey1) * h*(1+z) #Mpc/h comoving
@@ -93,7 +95,7 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
         print cal, h, covname, "Blinding factor:",blinding_factor
     print "Doing cal:",cal, "Hubble:",h, "Omega_m:",om, "Covariance type:",covname
     
-    args = {"z":z, "lam":lam, "Rlam":Rlam, "k":k, "Plin":Plin, "Pnl":Pnl, "Rmodel":Rmodel, "xi_nl":xi_nl, "xi_lin":xi_lin, "Rdata":Rdata, "ds":ds, "cov":cov, "icov":icov, "Rb":Rb, "Bp1":Bp1, "Bcov":Bcov, "iBcov":iBcov, "Redges":Redges, "inds":inds, "Am_prior":Am_prior, "Am_prior_var":Am_prior_var, "sigma_crit_inv":SCI, "model_name":model_name, "zi":zi, "lj":lj, "blinding_factor":blinding_factor, 'h':h, 'om':om, 'defaults':defaults, 'cspline':conc_spline}
+    args = {"z":z, "lam":lam, "Rlam":Rlam, "k":k, "Plin":Plin, "Pnl":Pnl, "Rmodel":Rmodel, "xi_nl":xi_nl, "xi_lin":xi_lin, "Rdata":Rdata, "ds":ds, "cov":cov, "icov":icov, "Rb":Rb, "Bp1":Bp1, "Bcov":Bcov, "iBcov":iBcov, "Redges":Redges, "inds":inds, "Am_prior":Am_prior, "Am_prior_var":Am_prior_var, "sigma_crit_inv":SCI, "model_name":model_name, "zi":zi, "lj":lj, "blinding_factor":blinding_factor, 'h':h, 'om':om, 'defaults':defaults, 'cspline':conc_spline, 'xi_nl2':xi_nl2}
     return paths, args
 
 def get_calTF():
@@ -172,7 +174,7 @@ def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=F
     else: print "Using SACs"
     return R, ds, np.linalg.inv(cov), cov, indices
 
-def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=False, diag_only=False):
+def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=False, diag_only=True):
     if usey1:
         boostpath = y1boostbase%(lj, zi)
         bcovpath  = y1boostcovbase%(lj, zi)

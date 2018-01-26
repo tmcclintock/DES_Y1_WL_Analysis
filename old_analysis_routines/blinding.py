@@ -29,3 +29,5 @@ def get_blinding_variables():
     
 if __name__ == "__main__":
     make_random_variables()
+    b,a,be = get_blinding_variables()
+    print be

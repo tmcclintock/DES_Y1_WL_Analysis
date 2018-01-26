@@ -4,7 +4,7 @@ from helper_functions import *
 
 def starts(name):
     if name == 'nfw':
-        return [0.1, 1.0]
+        return [0.14, 1.5]
     elif name == 'pl':
         return [0.1, 1.0, -1.0]
 
@@ -18,7 +18,7 @@ def do_best_fit(args, bfpath):
     import scipy.optimize as op
     nll = lambda *args: -lnprob(*args)
     print "Running best fit"
-    result = op.minimize(nll, guess, args=(args,))
+    result = op.minimize(nll, guess, args=(args,), method='Powell')
     print "Best fit saved at :\n\t%s"%bfpath
     print "\tSuccess = %s\n\t%s"%(result['success'],result['x'])
     #print result
@@ -82,7 +82,7 @@ if __name__ == "__main__":
             likespath = likesbase+"_z%d_l%d.txt"%(i, j)
             
             print "Working at z%d l%d"%(i, j)
-            Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, usey1=usey1, alldata=False, diag_only=False)
+            Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, usey1=usey1, alldata=False, diag_only=True)
             args = {'Rb':Rb, 'Bp1':Bp1, 'iBcov':iBcov, 'Bcov':Bcov, 'zi':i, 'lj':j, 'usey1':usey1, 'model_name':model_name, 'name':name}
             
             test_call(args)

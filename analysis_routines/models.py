@@ -24,6 +24,7 @@ def model_swap(params, args):
         c = conc_spline(10**(lM-blinding_factor), z)
     elif name == "M":
         lM = params
+        conc_spline = args['cspline']
         c = conc_spline(10**(lM-blinding_factor), z)
     return [lM-blinding_factor, c, tau, fmis, Am, B0, Rs]
 
