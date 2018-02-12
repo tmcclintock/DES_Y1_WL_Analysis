@@ -52,14 +52,14 @@ def do_mcmc(args, bfpath, chainpath, likespath):
 
 if __name__ == '__main__':
     name = "y1"
-    model_name = "full" #Mc, full, Afixed, cfixed
+    model_name = "M" #Mc, full, Afixed, cfixed
     blinded = True
     cal = False
     useJK = False
 
     #Loop over bins
     zhi, zlo = 0, -1
-    lhi, llo = 3, 2
+    lhi, llo = 6, 5
     for i in xrange(zhi, zlo, -1):#z bins #only 2,1,0 for y1 and sv but 3,2,1,0 for cal
         for j in xrange(lhi, llo, -1): #lambda bins
             paths, args = get_args_and_paths(name, i, j, model_name, blinded, cal, useJK)
@@ -75,4 +75,4 @@ if __name__ == '__main__':
             #args["model_name"]=model_name #Reset this
             #test_call(args, bfpath=bfpath, testbf=True)
             args["model_name"]=model_name #Reset this
-            do_mcmc(args, bfpath, chainpath, likespath)
+            #do_mcmc(args, bfpath, chainpath, likespath)

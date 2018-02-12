@@ -82,9 +82,15 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
     xi_nl2  = ct.xi.xi_mm_at_R(Rmodel, k, Pnl, N=200)
     xi_nl  = ct.xi.xi_mm_at_R(Rmodel, k, Pnl)
     xi_lin = ct.xi.xi_mm_at_R(Rmodel, k, Plin)
-    Rdata, ds, icov, cov, inds = get_data_and_icov(zi, lj, usey1=usey1, useJK=useJK, cal=cal)
-    if cal: Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zmap[zi], lj, usey1=usey1, diag_only=True)
-    else: Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zi, lj, usey1=usey1, diag_only=True)
+    lowcut = 1.0 #Mpc physical
+    Rdata, ds, icov, cov, inds = get_data_and_icov(zi, lj, lowcut=lowcut, usey1=usey1, useJK=useJK, cal=cal)
+    print "DeltaSigma shapes:",ds.shape, icov.shape
+    if cal:
+        Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zmap[zi], lj, usey1=usey1, diag_only=True)
+    else:
+        print "here"
+        Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zi, lj, lowcut=lowcut, usey1=usey1, diag_only=True)
+    print "Boost shapes:",Bp1.shape, iBcov.shape
     if cal: Am_prior, Am_prior_var = get_Am_prior(zmap[zi], lj)
     else: Am_prior, Am_prior_var = get_Am_prior(zi, lj)
     Redges = get_Redges(usey1 = usey1) * h*(1+z) #Mpc/h comoving
@@ -182,7 +188,6 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alld
         #bcovpath  = y1boostcovbase%(zi, lj) #TEMP
         Bcov = np.loadtxt(bcovpath)
         Rb, Bp1, Be = np.genfromtxt(boostpath, unpack=True)
-        print "Boost data shapes: ",Rb.shape, Bp1.shape, Be.shape, Bcov.shape
         Becut = Be > 1e-6
         Bp1 = Bp1[Becut]
         Rb  = Rb[Becut]
@@ -204,6 +209,7 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alld
         #Note: the boost factors don't have the same number of radial bins
         #as deltasigma. This doesn't matter, because all we do is
         #de-boost the model, which fits to the boost factors independently.
+        print "Boost data shapes: ",Rb.shape, Bp1.shape, Be.shape, Bcov.shape
         return Rb, Bp1, np.linalg.inv(Bcov), Bcov
     else: #use_sv
         print "SV boosts"
