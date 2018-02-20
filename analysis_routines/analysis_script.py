@@ -6,7 +6,6 @@ import os, sys
 
 def test_call(args, bfpath=None, testbf=False):
     guess = get_model_start(model_name, args['lam'], args['h'])
-    guess = np.array([1.42164161e+01,  3.43982730e+00,  1.51190046e-01,  5.55256056e-01,  1.11313895e+00,  2.16315459e-04,  8.85130249e+07])
     if testbf:
         print "Testing bestfit"
         guess = np.loadtxt(bfpath) #Has everything
@@ -56,7 +55,7 @@ if __name__ == '__main__':
     model_name = "full" #Mc, full, Afixed, cfixed
     blinded = True
     cal = False
-    useJK = False
+    useJK = True
 
     #Loop over bins
     zhi, zlo = 2, 1

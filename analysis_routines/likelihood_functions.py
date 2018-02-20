@@ -26,7 +26,6 @@ def lnlike(params, args):
     ds_model = ave_DeltaSigma[inds] #Scale cuts
     ds_model *= h*(1+z)**2 #convert to Msun/pc^2 physical
     X = ds - ds_model
-    print params
     LLDS = -0.5*np.dot(X, np.dot(icov, X))
     
     Bp1 = args['Bp1']
@@ -34,13 +33,6 @@ def lnlike(params, args):
     boost_model = get_boost_model(params, args)
     Xb = Bp1 - boost_model
     LLboost = -0.5*np.dot(Xb, np.dot(iBcov, Xb))
-    print boost_model
-    import matplotlib.pyplot as plt
-    #plt.loglog(args['Rdata'], ds)
-    #plt.loglog(args['Rdata'], ds_model)
-    plt.plot(args['Rb'], Bp1)
-    plt.plot(args['Rb'], boost_model)
-    plt.show()
     return LLDS + LLboost
 
 def lnprob(params, args):
