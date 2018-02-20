@@ -82,7 +82,7 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
     xi_nl2  = ct.xi.xi_mm_at_R(Rmodel, k, Pnl, N=200)
     xi_nl  = ct.xi.xi_mm_at_R(Rmodel, k, Pnl)
     xi_lin = ct.xi.xi_mm_at_R(Rmodel, k, Plin)
-    lowcut = 0.5 #Mpc physical
+    lowcut = 0.2 #Mpc physical
     Rdata, ds, icov, cov, inds = get_data_and_icov(zi, lj, lowcut=lowcut, usey1=usey1, useJK=useJK, cal=cal)
     if cal:
         Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zmap[zi], lj, usey1=usey1, diag_only=True)
