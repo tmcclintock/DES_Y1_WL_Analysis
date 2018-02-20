@@ -30,7 +30,7 @@ def find_best_fit(args, bestfitpath):
     return 
 
 def do_mcmc(args, bfpath, chainpath, likespath):
-    nwalkers, nsteps = 32, 3000
+    nwalkers, nsteps = 32, 10000
     import emcee
     model_name = args['model_name']
     bfmodel = np.loadtxt(bfpath) #Has everything
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     model_name = "full" #Mc, full, Afixed, cfixed
     blinded = True
     cal = False
-    useJK = True
+    useJK = False
 
     #Loop over bins
     zhi, zlo = 2, 1
