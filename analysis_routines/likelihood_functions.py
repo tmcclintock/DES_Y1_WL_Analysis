@@ -7,12 +7,12 @@ from models import *
 
 def lnprior(params, Am_prior, Am_prior_var):
     lM, c, tau, fmis, Am, B0, Rs = params
-    if lM < 11.0 or lM > 18.0 or c <= 0.0 or c > 20.0 or Am <= 0.0 or tau <= 0.0 or Rs <=0.0 or B0 < 0.0 or fmis < 0.0 or fmis > 1.0: return -np.inf
+    if lM < 11.0 or lM > 18.0 or c <= 0.0 or c > 20.0 or Am <= 0.0 or tau <= 0.0  or fmis < 0.0 or fmis > 1.0: return -np.inf
+    if Rs <=0.0 or B0 < 0.0 or Rs > 100.: return -np.inf
     LPfmis = (0.32 - fmis)**2/0.05**2 #Y1 REAL PRIORS
     LPtau  = (0.153 - tau)**2/0.03**2 #Y1 REAL PRIORS
     #LPfmis = (0.16 - fmis)**2/0.1**2 #Y1 TEST PRIORS
     #LPtau  = (0.166 - tau)**2/0.08**2 #Y1 TEST PRIORS
-
     LPA    = (Am_prior - Am)**2/Am_prior_var #Y1
     return -0.5*(LPfmis + LPtau + LPA)
 
@@ -22,11 +22,11 @@ def lnlike(params, args):
     ds = args['ds']
     icov = args['icov']
     h = args['h']
-
     Rp, Sigma, Sigma_mis, DScen, DSmis, full_DeltaSigma, ave_DeltaSigma, boost_model_at_Rmodel = get_delta_sigma(params, args)
     ds_model = ave_DeltaSigma[inds] #Scale cuts
     ds_model *= h*(1+z)**2 #convert to Msun/pc^2 physical
     X = ds - ds_model
+    print params
     LLDS = -0.5*np.dot(X, np.dot(icov, X))
     
     Bp1 = args['Bp1']
@@ -34,6 +34,13 @@ def lnlike(params, args):
     boost_model = get_boost_model(params, args)
     Xb = Bp1 - boost_model
     LLboost = -0.5*np.dot(Xb, np.dot(iBcov, Xb))
+    print boost_model
+    import matplotlib.pyplot as plt
+    #plt.loglog(args['Rdata'], ds)
+    #plt.loglog(args['Rdata'], ds_model)
+    plt.plot(args['Rb'], Bp1)
+    plt.plot(args['Rb'], boost_model)
+    plt.show()
     return LLDS + LLboost
 
 def lnprob(params, args):
@@ -42,5 +49,5 @@ def lnprob(params, args):
     Am_prior_var = args['Am_prior_var']
     pars = model_swap(params, args)
     lpr = lnprior(pars, Am_prior, Am_prior_var)
-    if not np.isfinite(lpr): return -np.inf
+    if not np.isfinite(lpr): return -1e99
     return lpr + lnlike(pars, args)

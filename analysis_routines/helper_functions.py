@@ -82,14 +82,12 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
     xi_nl2  = ct.xi.xi_mm_at_R(Rmodel, k, Pnl, N=200)
     xi_nl  = ct.xi.xi_mm_at_R(Rmodel, k, Pnl)
     xi_lin = ct.xi.xi_mm_at_R(Rmodel, k, Plin)
-    lowcut = 1.0 #Mpc physical
+    lowcut = 0.5 #Mpc physical
     Rdata, ds, icov, cov, inds = get_data_and_icov(zi, lj, lowcut=lowcut, usey1=usey1, useJK=useJK, cal=cal)
-    print "DeltaSigma shapes:",ds.shape, icov.shape
     if cal:
         Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zmap[zi], lj, usey1=usey1, diag_only=True)
     else:
-        print "here"
-        Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zi, lj, lowcut=lowcut, usey1=usey1, diag_only=True)
+        Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zi, lj, lowcut=lowcut, usey1=usey1, diag_only=False)
     print "Boost shapes:",Bp1.shape, iBcov.shape
     if cal: Am_prior, Am_prior_var = get_Am_prior(zmap[zi], lj)
     else: Am_prior, Am_prior_var = get_Am_prior(zi, lj)
@@ -100,7 +98,6 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
         blinding_factor*=0
         print cal, h, covname, "Blinding factor:",blinding_factor
     print "Doing cal:",cal, "Hubble:",h, "Omega_m:",om, "Covariance type:",covname
-    
     args = {"z":z, "lam":lam, "Rlam":Rlam, "k":k, "Plin":Plin, "Pnl":Pnl, "Rmodel":Rmodel, "xi_nl":xi_nl, "xi_lin":xi_lin, "Rdata":Rdata, "ds":ds, "cov":cov, "icov":icov, "Rb":Rb, "Bp1":Bp1, "Bcov":Bcov, "iBcov":iBcov, "Redges":Redges, "inds":inds, "Am_prior":Am_prior, "Am_prior_var":Am_prior_var, "sigma_crit_inv":SCI, "model_name":model_name, "zi":zi, "lj":lj, "blinding_factor":blinding_factor, 'h':h, 'om':om, 'defaults':defaults, 'cspline':conc_spline, 'xi_nl2':xi_nl2}
     return paths, args
 

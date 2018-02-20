@@ -6,6 +6,7 @@ import os, sys
 
 def test_call(args, bfpath=None, testbf=False):
     guess = get_model_start(model_name, args['lam'], args['h'])
+    guess = np.array([1.42164161e+01,  3.43982730e+00,  1.51190046e-01,  5.55256056e-01,  1.11313895e+00,  2.16315459e-04,  8.85130249e+07])
     if testbf:
         print "Testing bestfit"
         guess = np.loadtxt(bfpath) #Has everything
@@ -52,13 +53,13 @@ def do_mcmc(args, bfpath, chainpath, likespath):
 
 if __name__ == '__main__':
     name = "y1"
-    model_name = "M" #Mc, full, Afixed, cfixed
+    model_name = "full" #Mc, full, Afixed, cfixed
     blinded = True
     cal = False
     useJK = False
 
     #Loop over bins
-    zhi, zlo = 0, -1
+    zhi, zlo = 2, 1
     lhi, llo = 6, 5
     for i in xrange(zhi, zlo, -1):#z bins #only 2,1,0 for y1 and sv but 3,2,1,0 for cal
         for j in xrange(lhi, llo, -1): #lambda bins
@@ -71,7 +72,7 @@ if __name__ == '__main__':
 
             #Flow control for whatever you want to do
             test_call(args)
-            find_best_fit(args, bfpath)
+            #find_best_fit(args, bfpath)
             #args["model_name"]=model_name #Reset this
             #test_call(args, bfpath=bfpath, testbf=True)
             args["model_name"]=model_name #Reset this
