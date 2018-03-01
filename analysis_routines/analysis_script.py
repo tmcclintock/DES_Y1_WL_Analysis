@@ -53,13 +53,13 @@ def do_mcmc(args, bfpath, chainpath, likespath):
 if __name__ == '__main__':
     name = "y1"
     model_name = "full" #Mc, full, Afixed, cfixed
-    blinded = True
+    blinded = False
     cal = False
     useJK = False
 
     #Loop over bins
-    zhi, zlo = 2, 1
-    lhi, llo = 6, 5
+    zhi, zlo = 2, -1
+    lhi, llo = 6, 2
     for i in xrange(zhi, zlo, -1):#z bins #only 2,1,0 for y1 and sv but 3,2,1,0 for cal
         for j in xrange(lhi, llo, -1): #lambda bins
             paths, args = get_args_and_paths(name, i, j, model_name, blinded, cal, useJK)
@@ -71,8 +71,8 @@ if __name__ == '__main__':
 
             #Flow control for whatever you want to do
             test_call(args)
-            #find_best_fit(args, bfpath)
+            find_best_fit(args, bfpath)
             #args["model_name"]=model_name #Reset this
             #test_call(args, bfpath=bfpath, testbf=True)
             args["model_name"]=model_name #Reset this
-            #do_mcmc(args, bfpath, chainpath, likespath)
+            do_mcmc(args, bfpath, chainpath, likespath)

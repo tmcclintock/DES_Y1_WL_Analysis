@@ -6,8 +6,8 @@ import cluster_toolkit as ct
 from scipy.interpolate import interp2d
 import blinding
 
-#fullbase = "/home/tmcclintock/Desktop/des_wl_work" #susie
-fullbase = "/Users/tmcclintock/Data" #laptop
+fullbase = "/home/tmcclintock/Desktop/des_wl_work" #susie
+#fullbase = "/Users/tmcclintock/Data" #laptop
 #fullbase = "/calvin1/tmcclintock/DES_DATA_FILES" #calvin
 #Y1 paths
 y1base = fullbase+"/DATA_FILES/y1_data_files/"
@@ -64,9 +64,9 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
 
     #First fix the paths
     basesuffix = name+"_"+covname+"_z%d_l%d"%(zi, lj)
-    bfpath = "bestfits/bf_%s_%s.txt"%(model_name, basesuffix)
-    chainpath   = "chains/chain_%s_%s.txt"%(model_name, basesuffix)
-    likespath   = "chains/likes_%s_%s.txt"%(model_name, basesuffix)
+    bfpath = "bestfits/ubbf_%s_%s.txt"%(model_name, basesuffix)
+    chainpath   = "chains/ubchain_%s_%s.txt"%(model_name, basesuffix)
+    likespath   = "chains/ublikes_%s_%s.txt"%(model_name, basesuffix)
     paths = [bfpath, chainpath, likespath]
     
     #Now prep the args
@@ -82,7 +82,7 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
     xi_nl2  = ct.xi.xi_mm_at_R(Rmodel, k, Pnl, N=200)
     xi_nl  = ct.xi.xi_mm_at_R(Rmodel, k, Pnl)
     xi_lin = ct.xi.xi_mm_at_R(Rmodel, k, Plin)
-    lowcut = 0.5 #Mpc physical
+    lowcut = 0.2 #Mpc physical
     Rdata, ds, icov, cov, inds = get_data_and_icov(zi, lj, lowcut=lowcut, usey1=usey1, useJK=useJK, cal=cal)
     if cal:
         Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(zmap[zi], lj, usey1=usey1, diag_only=True)
@@ -99,6 +99,7 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
         print cal, h, covname, "Blinding factor:",blinding_factor
     print "Doing cal:",cal, "Hubble:",h, "Omega_m:",om, "Covariance type:",covname
     args = {"z":z, "lam":lam, "Rlam":Rlam, "k":k, "Plin":Plin, "Pnl":Pnl, "Rmodel":Rmodel, "xi_nl":xi_nl, "xi_lin":xi_lin, "Rdata":Rdata, "ds":ds, "cov":cov, "icov":icov, "Rb":Rb, "Bp1":Bp1, "Bcov":Bcov, "iBcov":iBcov, "Redges":Redges, "inds":inds, "Am_prior":Am_prior, "Am_prior_var":Am_prior_var, "sigma_crit_inv":SCI, "model_name":model_name, "zi":zi, "lj":lj, "blinding_factor":blinding_factor, 'h':h, 'om':om, 'defaults':defaults, 'cspline':conc_spline, 'xi_nl2':xi_nl2}
+    print "BLINDING: ",args['blinding_factor']
     return paths, args
 
 def get_calTF():
@@ -278,16 +279,18 @@ def get_model_start(model_name, lam, h):
     return guess
 
 def get_mcmc_start(model, model_name):
-    lM, c, tau, fmis, Am, B0, Rs = model
     if model_name is "full":
+        lM, c, tau, fmis, Am, B0, Rs = model
         return model
     elif model_name is "Afixed":
+        lM, c, tau, fmis, B0, Rs = model
         return [lM, c, tau, fmis, B0, Rs]
     elif model_name is "cfixed":
         return [lM, tau, fmis, Am, B0, Rs]
     elif model_name is "Mc":
         return [lM, c]
     elif model_name is "M":
+        lM = model
         return [lM,]
     
 def get_cosmo_default(cal=False):
