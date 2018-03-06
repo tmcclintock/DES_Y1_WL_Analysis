@@ -26,7 +26,6 @@ def model_swap(params, args):
         lM = params
         conc_spline = args['cspline']
         c = conc_spline(10**(lM-blinding_factor), z)
-    print "BLINDED:",lM
     return [lM-blinding_factor, c, tau, fmis, Am, B0, Rs]
 
 def get_delta_sigma(params, args):
@@ -41,7 +40,6 @@ def get_delta_sigma(params, args):
     om = args['om']
     sigma_crit_inv = args['sigma_crit_inv'] #pc^2/hMsun comoving
     Redges = args['Redges'] #Mpc/h comoving
-    print "UNBLINDED:",lM
     M = 10**lM #Msun/h
     xi_nfw   = ct.xi.xi_nfw_at_R(Rmodel, M, c, om)
     bias = ct.bias.bias_at_M(M, k, Plin, om)

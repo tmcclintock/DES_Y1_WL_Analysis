@@ -52,8 +52,8 @@ def do_mcmc(args, bfpath, chainpath, likespath):
 
 if __name__ == '__main__':
     name = "y1"
-    model_name = "full" #Mc, full, Afixed, cfixed
-    blinded = True
+    model_name = "Mc" #Mc, full, Afixed, cfixed
+    blinded = False
     cal = False
     useJK = False
 
@@ -76,4 +76,4 @@ if __name__ == '__main__':
             #args["model_name"]=model_name #Reset this
             #test_call(args, bfpath=bfpath, testbf=True)
             args["model_name"]=model_name #Reset this
-            #do_mcmc(args, bfpath, chainpath, likespath)
+            do_mcmc(args, bfpath, chainpath, likespath)

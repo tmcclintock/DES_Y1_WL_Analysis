@@ -286,6 +286,7 @@ def get_mcmc_start(model, model_name):
     elif model_name is "cfixed":
         return [lM, tau, fmis, Am, B0, Rs]
     elif model_name is "Mc":
+        lM, c = model
         return [lM, c]
     elif model_name is "M":
         lM = model
