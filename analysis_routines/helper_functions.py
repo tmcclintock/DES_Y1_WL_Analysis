@@ -6,8 +6,8 @@ import cluster_toolkit as ct
 from scipy.interpolate import interp2d
 import blinding
 
-fullbase = "/home/tmcclintock/Desktop/des_wl_work" #susie
-#fullbase = "/Users/tmcclintock/Data" #laptop
+#fullbase = "/home/tmcclintock/Desktop/des_wl_work" #susie
+fullbase = "/Users/tmcclintock/Data" #laptop
 #fullbase = "/calvin1/tmcclintock/DES_DATA_FILES" #calvin
 #Y1 paths
 y1base = fullbase+"/DATA_FILES/y1_data_files/"
@@ -64,9 +64,9 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
 
     #First fix the paths
     basesuffix = name+"_"+covname+"_z%d_l%d"%(zi, lj)
-    bfpath = "bestfits/ubbf_%s_%s.txt"%(model_name, basesuffix)
-    chainpath   = "chains/ubchain_%s_%s.txt"%(model_name, basesuffix)
-    likespath   = "chains/ublikes_%s_%s.txt"%(model_name, basesuffix)
+    bfpath = "bestfits/bf_%s_%s.txt"%(model_name, basesuffix)
+    chainpath   = "chains/chain_%s_%s.txt"%(model_name, basesuffix)
+    likespath   = "chains/likes_%s_%s.txt"%(model_name, basesuffix)
     paths = [bfpath, chainpath, likespath]
     
     #Now prep the args
@@ -182,8 +182,6 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alld
     if usey1:
         boostpath = y1boostbase%(lj, zi)
         bcovpath  = y1boostcovbase%(lj, zi)
-        #boostpath = y1boostbase%(zi, lj) #TEMP
-        #bcovpath  = y1boostcovbase%(zi, lj) #TEMP
         Bcov = np.loadtxt(bcovpath)
         Rb, Bp1, Be = np.genfromtxt(boostpath, unpack=True)
         Becut = Be > 1e-6
