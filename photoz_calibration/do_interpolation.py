@@ -41,4 +41,4 @@ plt.errorbar(zy1.flatten(), Ratioy1.flatten(), Ratioey1.flatten(), ls='', marker
 plt.ylabel(r"$(1+\delta)^{-1} = \Sigma_{crit,true}^{-1}/\Sigma_{crit,mof}^{-1}$")
 plt.xlabel("redshift")
 plt.subplots_adjust(bottom=0.15, left=0.15)
-#plt.show()
+plt.show()
