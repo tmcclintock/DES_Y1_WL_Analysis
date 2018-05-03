@@ -14,8 +14,8 @@ def update_args(args, zi, lj, H0, Om):
     params = {
         'output': 'mPk',
         "h":h,
-        #"A_s":1.9735e-9, #Was set by hand...
-        "sigma8":0.8,
+        "A_s":1.9735e-9, #Was set by hand...
+        #"sigma8":0.8,
         "n_s":0.96,
         "Omega_b":Ob,
         "Omega_cdm":Ocdm,
@@ -23,8 +23,10 @@ def update_args(args, zi, lj, H0, Om):
         'P_k_max_1/Mpc':1000.,
         'z_max_pk':1.0,
         'non linear':'halofit'}
+    print h, Om
     cosmo = Class()
     cosmo.set(params)
+    print "computing"
     cosmo.compute()
     print "sigma8 is:", cosmo.sigma8()
 
