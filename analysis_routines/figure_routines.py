@@ -14,7 +14,7 @@ import clusterwl
 Blinding_amp, lam_exp, z_exp = blinding.get_blinding_variables()
 
 plt.rc("text", usetex=True)
-plt.rc("font", size=30, family="serif")
+plt.rc("font", size=20, family="serif")
 plt.rc("errorbar", capsize=3)
 
 DSlabel = r"$\Delta\Sigma$ [ M$_\odot$/pc$^2$]"
@@ -192,8 +192,10 @@ def plot_fourpanels(params, args, i, j):
     axarr[1].get_yaxis().set_visible(False)
     axarr[1].set_ylim(.9, 1.8)
     axtwin = axarr[1].twinx()
-    axtwin.set_ylabel(r"$(1-f_{\rm cl})^{-1}$")
+    lfs = 30
+    axtwin.set_ylabel(r"$(1-f_{\rm cl})^{-1}$", fontsize=lfs)
     axtwin.set_ylim(axarr[1].get_ylim())
+    axtwin.set_yticks([1.0,1.25,1.5,1.75])
 
     X = (Bp1 - boost_Rb)[good]
     Bcov = Bcov[good]
@@ -214,13 +216,13 @@ def plot_fourpanels(params, args, i, j):
     axarr[3].set_yticklabels([])
     axtwin2 = axarr[3].twinx()
     axtwin2.set_ylim(-ylim, ylim)
-    axtwin2.set_ylabel(r"$\frac{(1-f_{\rm cl})^{-1}-\mathcal{B}}{\mathcal{B}}$")
+    axtwin2.set_ylabel(r"$\frac{(1-f_{\rm cl})^{-1}-\mathcal{B}}{\mathcal{B}}$", fontsize=24)
 
     #axarr[2].set_ylabel(r"\% Diff")#, fontsize=14)
     #axarr[2].set_ylabel(r"${\rm \frac{Data-Model}{Model}}$")
-    axarr[2].set_ylabel(r"${\rm \frac{\Delta\Sigma-\Delta\Sigma_{Model}}{\Delta\Sigma_{Model}}}$")
-    axarr[2].set_xlabel(Rlabel)
-    axarr[3].set_xlabel(Rlabel)    
+    axarr[2].set_ylabel(r"${\rm \frac{\Delta\Sigma-\Delta\Sigma_{Model}}{\Delta\Sigma_{Model}}}$", fontsize=24)
+    axarr[2].set_xlabel(Rlabel, fontsize=lfs)
+    axarr[3].set_xlabel(Rlabel, fontsize=lfs)
     axarr[0].set_ylim(0.1, 1e3)
     for axinds in range(4):
         axarr[axinds].set_xscale('log')        
@@ -279,6 +281,6 @@ if __name__ == '__main__':
             print means
             params = means
             params = model_swap(params, args)
-            plot_just_DS(params, args, i, j)
+            #plot_just_DS(params, args, i, j)
             #plot_boost_and_resid(params, args, i, j)
-            #plot_fourpanels(params, args, i, j)
+            plot_fourpanels(params, args, i, j)
