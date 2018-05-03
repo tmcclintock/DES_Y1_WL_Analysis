@@ -31,7 +31,7 @@ def find_best_fit(args, bestfitpath):
     return 
 
 def do_mcmc(args, bfpath, chainpath, likespath):
-    nwalkers, nsteps = 32, 10000
+    nwalkers, nsteps = 32, 4000
     import emcee
     model_name = args['model_name']
     bfmodel = np.loadtxt(bfpath) #Has everything
@@ -53,7 +53,7 @@ def do_mcmc(args, bfpath, chainpath, likespath):
 
 if __name__ == '__main__':
     name = "y1"
-    model_name = "Mc" #Mc, full, Afixed, cfixed
+    model_name = "full" #Mc, full, Afixed, cfixed
     cal = False
     useJK = False
 
@@ -79,8 +79,8 @@ if __name__ == '__main__':
             print i,j
             #Flow control for whatever you want to do
             test_call(args)
-            #find_best_fit(args, bfpath)
+            find_best_fit(args, bfpath)
             #args["model_name"]=model_name #Reset this
-            #test_call(args, bfpath=bfpath, testbf=True)
+            test_call(args, bfpath=bfpath, testbf=True)
             args["model_name"]=model_name #Reset this
-            #do_mcmc(args, bfpath, chainpath, likespath)
+            do_mcmc(args, bfpath, chainpath, likespath)
