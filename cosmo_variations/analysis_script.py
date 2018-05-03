@@ -44,11 +44,11 @@ def do_mcmc(args, bfpath, chainpath, likespath):
     sampler.run_mcmc(pos, nsteps)
     print "MCMC complete"
     if os.path.isfile(chainpath):
-        np.savetxt(chainpath+".new", sampler.flatchain)
-        np.savetxt(likespath+".new", sampler.flatlnprobability)
+        np.save(chainpath+".new", sampler.flatchain)
+        np.save(likespath+".new", sampler.flatlnprobability)
     else:
-        np.savetxt(chainpath, sampler.flatchain)
-        np.savetxt(likespath, sampler.flatlnprobability)
+        np.save(chainpath, sampler.flatchain)
+        np.save(likespath, sampler.flatlnprobability)
     return
 
 if __name__ == '__main__':
