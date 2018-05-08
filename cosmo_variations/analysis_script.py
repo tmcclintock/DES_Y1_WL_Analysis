@@ -44,11 +44,11 @@ def do_mcmc(args, bfpath, chainpath, likespath):
     sampler.run_mcmc(pos, nsteps)
     print "MCMC complete"
     if os.path.isfile(chainpath):
-        np.savetxt(chainpath+".new", sampler.flatchain)
-        np.savetxt(likespath+".new", sampler.flatlnprobability)
+        np.save(chainpath+".new", sampler.flatchain)
+        np.save(likespath+".new", sampler.flatlnprobability)
     else:
-        np.savetxt(chainpath, sampler.flatchain)
-        np.savetxt(likespath, sampler.flatlnprobability)
+        np.save(chainpath, sampler.flatchain)
+        np.save(likespath, sampler.flatlnprobability)
     return
 
 if __name__ == '__main__':
@@ -58,29 +58,28 @@ if __name__ == '__main__':
     useJK = False
 
     #Loop over bins
-    zhi, zlo = 2, 1
-    lhi, llo = 6, 5
+    zhi, zlo = 2, -1
+    lhi, llo = 6, 2
     for i in xrange(zhi, zlo, -1):#z bins #only 2,1,0 for y1 and sv but 3,2,1,0 for cal
         for j in xrange(lhi, llo, -1): #lambda bins
                     
 
             #LOOP OVER COSMOLOGICAL PARAMETERS HERE
-            for H0 in [70.]:#[60.,65.,70.,75.,80.]:
-                for Om in [0.2]:#,0.25,0.3,0.35,0.40]:
+            for H0 in [70.,60.,65.,70.,75.,80.]:
+                for Om in [0.2,0.25,0.3,0.35,0.40]:
                     if Om == 0.3: continue #files not ready yet
                     paths, args = get_args_and_paths(name, i, j, H0, Om, model_name, cal, useJK)
                     args = update_args(args, i, j, H0, Om)
             
-            bfpath, chainpath, likespath = paths
-            print "Working at z%d l%d for %s"%(i,j,name)
-            print "\tMean z:%f\n\tMean lambda:%f"%(args['z'], args['lam'])
-            print "Saving to:\n\t%s\n\t%s\n\t%s"%(bfpath, chainpath, likespath)
+                    bfpath, chainpath, likespath = paths
+                    print "Working at z%d l%d for %s"%(i,j,name)
+                    print "\tMean z:%f\n\tMean lambda:%f"%(args['z'], args['lam'])
+                    print "Saving to:\n\t%s\n\t%s\n\t%s"%(bfpath, chainpath, likespath)
 
-            print i,j
-            #Flow control for whatever you want to do
-            test_call(args)
-            find_best_fit(args, bfpath)
-            #args["model_name"]=model_name #Reset this
-            test_call(args, bfpath=bfpath, testbf=True)
-            args["model_name"]=model_name #Reset this
-            do_mcmc(args, bfpath, chainpath, likespath)
+                    #Flow control for whatever you want to do
+                    test_call(args)
+                    find_best_fit(args, bfpath)
+                    #args["model_name"]=model_name #Reset this
+                    #test_call(args, bfpath=bfpath, testbf=True)
+                    args["model_name"]=model_name #Reset this
+                    do_mcmc(args, bfpath, chainpath, likespath)
