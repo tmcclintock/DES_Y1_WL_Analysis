@@ -1,6 +1,7 @@
 import numpy as np
 from likelihoods import *
 from helper_functions import *
+import cluster_toolkit as ct
 
 def starts(name):
     if name == 'nfw':
@@ -32,6 +33,7 @@ def plot_bf(args, bfpath, show=False):
     i, j, usey1 = args['zi'], args['lj'], args['usey1']
     Rb, Bp1, iBcov, Bcov = get_boost_data_and_cov(i, j, usey1=usey1, alldata=True)
     args['Rb'] = Rb
+    B0, Rs, alpha = mod.swap(guess,args)
     boost = mod.get_boost_model(mod.swap(guess, args), args)
     plt.plot(Rb, boost-1, label="%s model"%args['model_name'])
     plt.errorbar(Rb, Bp1-1, np.sqrt(Bcov.diagonal()))
@@ -43,6 +45,11 @@ def plot_bf(args, bfpath, show=False):
     if show:
         plt.show()
     plt.clf()
+    Rm = np.logspace(-1,np.log10(30), num=100)
+    bout = ct.boostfactors.boost_nfw_at_R(Rm, B0, Rs)
+    header = "R[Mpc; physical]; (1-f_{\rm cl})^{-1}"
+    fmt = "%.3f %.4e"
+    np.savetxt("tamas_files/boost_l%d_z%d.txt"%(j,i), np.array([Rm,bout]).T, header=header, fmt=fmt)
 
 def do_mcmc(args, bfpath, chainpath, likespath):
     nwalkers, nsteps = 32, 3000
@@ -74,6 +81,16 @@ if __name__ == "__main__":
     chainbase = "chains/chain_boost_%s_%s"%(name, model_name)
     likesbase = "chains/likes_boost_%s_%s"%(name, model_name)
 
+    bff = open("bestfit_params.txt", "w")
+    bff.write("zi lj B0 Rs\n")
+    for i in xrange(0,3):
+        for j in xrange(3,7):
+            bfpath = bfbase+"_z%d_l%d.txt"%(i, j)
+            B0,Rs = np.loadtxt(bfpath)
+            bff.write("%d %d %.3e %.3e\n"%(i,j,B0,Rs))
+    bff.close()
+    exit()
+            
     Nz, Nl = 3, 7
     for i in xrange(2, -1, -1):
         for j in xrange(6, 2, -1):
@@ -87,5 +104,5 @@ if __name__ == "__main__":
             
             test_call(args)
             do_best_fit(args, bfpath)
-            plot_bf(args, bfpath, show=False)
+            plot_bf(args, bfpath, show=True*0)
             #do_mcmc(args, bfpath, chainpath, likespath)
