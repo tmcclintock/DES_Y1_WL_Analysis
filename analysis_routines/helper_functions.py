@@ -32,8 +32,7 @@ svlamspath = svbase+"SV_meanl.txt"
 #calibration paths
 
 calbase = fullbase+"/DATA_FILES/calibration_data_files/"
-caldatabase = calbase+"deltasigma_z%d_m%d_scatter0.20.txt"
-#caldatabase = calbase+"cal_ps25_z%d_l%d.txt"
+caldatabase = calbase+"new_calDS_ps20_z%d_l%d.txt"
 calSACcovbase = y1SACcovbase
 calboostbase = y1boostbase
 calboostcovbase = y1boostcovbase
@@ -161,10 +160,7 @@ def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=F
         print "Calibration used instead z%d l%d with zmap=%d"%(zi, lj, zmap[zi])
         datapath = caldatabase%(zi, lj)
         covpath = calSACcovbase%(zmap[zi], lj)
-        R, ds = np.genfromtxt(datapath, unpack=True)
-    else:
-        R, ds, dse, dsx, dsxe = np.genfromtxt(datapath, unpack=True)
-
+    R, ds, dse, dsx, dsxe = np.genfromtxt(datapath, unpack=True)
     cov = np.genfromtxt(covpath)
     if zi == 0 and not usey1: highcut=21.5 #Just for z0 in SV
     indices = (R > lowcut)*(R < highcut)
