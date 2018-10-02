@@ -87,15 +87,21 @@ def plot_just_DS(params, args, i, j):
     if usey1: zlabel, llabel = y1zlabels[i], y1llabels[j]
     else: zlabel, llabel = svzlabels[i], svllabels[j]
     fs = 24
-    plt.text(3, 3e2, zlabel, fontsize=fs)
-    plt.text(3, 1e2,  llabel, fontsize=fs)
+    #plt.text(3, 3e2, zlabel, fontsize=fs)
+    #plt.text(3, 1e2,  llabel, fontsize=fs)
+    #plt.gca().text(.2, .6, r"$\chi^2=%.1f/%d$"%(chi2ds, Nds), fontsize=fs)
+
+    ax = plt.gca()
+    plt.text(.6, .87, zlabel, fontsize=fs, transform=ax.transAxes)
+    plt.text(.6, .75,  llabel, fontsize=fs, transform=ax.transAxes)
+    plt.text(.6, .63, r"$\chi^2=%.1f/%d$"%(chi2ds, Nds), fontsize=fs, transform=ax.transAxes)
+    
     plt.ylabel(DSlabel, fontsize=30)
     plt.xlabel(Rlabel, fontsize=30)
 
     plt.subplots_adjust(bottom=0.15, left=0.18)
-    plt.gca().text(.2, .6, r"$\chi^2=%.1f/%d$"%(chi2ds, Nds), fontsize=fs)
     #plt.gca().text(.3, 10, "PRELIMINARY", fontsize=30, color='r', alpha=0.4, zorder=-5)
-    plt.gcf().savefig("figures/deltasigma_z%d_l%d.png"%(i,j), transparent=True, dpi=500, bbox_inches='tight')
+    plt.gcf().savefig("figures/deltasigma_z%d_l%d.png"%(i,j), transparent=False, dpi=500, bbox_inches='tight')
     plt.show()
 
 def plot_boost_and_resid(params, args, i, j):
@@ -136,6 +142,11 @@ def plot_boost_and_resid(params, args, i, j):
 
 def plot_fourpanels(params, args, i, j):
     lM, c, tau, fmis, Am, B0, Rs = params
+    print "BOOST PARAMS: ",B0, Rs
+    B0 = 0.16
+    Rs = 1.38
+    params[-2] = B0
+    params[-1] = Rs
     Rdata = args['Rdata']
     cuts = args['cuts']
     cov = args['cov']
@@ -242,7 +253,7 @@ def plot_fourpanels(params, args, i, j):
     plt.subplots_adjust(hspace=0.0, wspace=0.0, bottom=0.15, left=0.17, right=0.80)
     #plt.suptitle("%s %s"%(zlabel, llabel))
     #plt.gcf().savefig("figures/fourpanel_z%d_l%d.pdf"%(i,j), transparent=True, dpi=500, bbox_inches='tight')
-    plt.gcf().savefig("figures/fourpanel_z%d_l%d.png"%(i,j), transparent=True, dpi=500, bbox_inches='tight')
+    plt.gcf().savefig("figures/fourpanel_z%d_l%d.png"%(i,j), transparent=False, dpi=500, bbox_inches='tight')
     plt.show()
     plt.clf()
     #plt.close()
@@ -265,10 +276,10 @@ if __name__ == '__main__':
     else: covname = "SAC"
 
     #Loop over bins
-    for i in xrange(0, -1, -1): #z bins
+    for i in xrange(2, 1, -1): #z bins
         #if i <2: continue
         for j in xrange(6, -1, -1): #lambda bins
-            if j > 3 or j < 3: continue
+            if j > 6 or j < 6: continue
             paths, args = get_args_and_paths(name, i, j, model_name, blinded, cal, useJK)
             bfpath, chainpath, likespath = paths
             chain = np.loadtxt(chainpath)

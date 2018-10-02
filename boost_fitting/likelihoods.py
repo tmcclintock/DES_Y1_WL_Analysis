@@ -3,7 +3,7 @@ from model import *
 
 def lnprior(params, args):
     B0, Rs, alpha = params
-    if Rs <=0.0 or B0 < 0.0:
+    if Rs <=0.0 or B0 < 0.0 or Rs > 100 or B0 > 10:
         return -np.inf
     return 0
 

@@ -10,8 +10,11 @@ z, Ratio, Ratioe = np.genfromtxt(datapath, unpack=True)
 Ratiospl = interp.interp1d(z,Ratio)# , kind="cubic")
 Ratioespl = interp.interp1d(z,Ratioe)#, kind="cubic")
 
-
+#CHANGE THIS FILE, OR ASSIGN zyi yourself
+#It is a 2D array that contains the mean redshifts
+#of the bins of your cluster sample.
 zy1 = np.loadtxt("Y1_meanz.txt")
+print zy1
 
 x = np.linspace(min(z), max(z), num=100)
 Ratiof = Ratiospl(x)

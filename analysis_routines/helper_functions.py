@@ -32,7 +32,8 @@ svlamspath = svbase+"SV_meanl.txt"
 #calibration paths
 
 calbase = fullbase+"/DATA_FILES/calibration_data_files/"
-caldatabase = calbase+"cal_ps25_z%d_l%d.txt"
+caldatabase = calbase+"deltasigma_z%d_m%d_scatter0.20.txt"
+#caldatabase = calbase+"cal_ps25_z%d_l%d.txt"
 calSACcovbase = y1SACcovbase
 calboostbase = y1boostbase
 calboostcovbase = y1boostcovbase
@@ -64,9 +65,9 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
 
     #First fix the paths
     basesuffix = name+"_"+covname+"_z%d_l%d"%(zi, lj)
-    bfpath = "bestfits/bf_%s_%s.txt"%(model_name, basesuffix)
-    chainpath   = "chains/chain_%s_%s.txt"%(model_name, basesuffix)
-    likespath   = "chains/likes_%s_%s.txt"%(model_name, basesuffix)
+    bfpath = "bestfits/bf_%s_%s_scatter0.20.txt"%(model_name, basesuffix)
+    chainpath   = "chains/chain_%s_%s_scatter0.20.txt"%(model_name, basesuffix)
+    likespath   = "chains/likes_%s_%s_scatter0.20.txt"%(model_name, basesuffix)
     paths = [bfpath, chainpath, likespath]
     
     #Now prep the args
@@ -160,7 +161,10 @@ def get_data_and_icov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alldata=F
         print "Calibration used instead z%d l%d with zmap=%d"%(zi, lj, zmap[zi])
         datapath = caldatabase%(zi, lj)
         covpath = calSACcovbase%(zmap[zi], lj)
-    R, ds, dse, dsx, dsxe = np.genfromtxt(datapath, unpack=True)
+        R, ds = np.genfromtxt(datapath, unpack=True)
+    else:
+        R, ds, dse, dsx, dsxe = np.genfromtxt(datapath, unpack=True)
+
     cov = np.genfromtxt(covpath)
     if zi == 0 and not usey1: highcut=21.5 #Just for z0 in SV
     indices = (R > lowcut)*(R < highcut)
@@ -350,5 +354,6 @@ if __name__ == "__main__":
     model_name = "full"
     zi = 0
     lj = 3
-    get_args_and_paths("cal", zi, lj, model_name, cal=True)
+    paths,args = get_args_and_paths("cal", zi, lj, model_name, cal=True)
+    print paths
     get_args_and_paths("y1", zi, lj, model_name)

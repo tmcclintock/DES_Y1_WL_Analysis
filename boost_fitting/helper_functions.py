@@ -49,5 +49,6 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alld
     D = len(Rb)
     Bcov = Bcov*((Njk-1.)/(Njk-D-2)) #Hartlap correction
     if diag_only:
+        print "USING DIAGONALS ONLY!!"
         Bcov = np.diag(Be**2)
     return Rb, Bp1, np.linalg.inv(Bcov), Bcov

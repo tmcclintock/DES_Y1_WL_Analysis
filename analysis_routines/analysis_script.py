@@ -51,29 +51,29 @@ def do_mcmc(args, bfpath, chainpath, likespath):
     return
 
 if __name__ == '__main__':
-    name = "y1"
+    name = "cal"
     model_name = "Mc" #Mc, full, Afixed, cfixed
     blinded = False
-    cal = False
+    cal = True
     useJK = False
 
     #Loop over bins
-    zhi, zlo = 2, 1
+    zhi, zlo = 3, 1 #0 is broken for cal right now
     lhi, llo = 6, 5
     for i in xrange(zhi, zlo, -1):#z bins #only 2,1,0 for y1 and sv but 3,2,1,0 for cal
         for j in xrange(lhi, llo, -1): #lambda bins
             paths, args = get_args_and_paths(name, i, j, model_name, blinded, cal, useJK)
             
             bfpath, chainpath, likespath = paths
-            #print "Working at z%d l%d for %s"%(i,j,name)
-            #print "\tMean z:%f\n\tMean lambda:%f"%(args['z'], args['lam'])
-            #print "Saving to:\n\t%s\n\t%s\n\t%s"%(bfpath, chainpath, likespath)
+            print "Working at z%d l%d for %s"%(i,j,name)
+            print "\tMean z:%f\n\tMean lambda:%f"%(args['z'], args['lam'])
+            print "Saving to:\n\t%s\n\t%s\n\t%s"%(bfpath, chainpath, likespath)
 
             print i,j, args['blinding_factor']
             #Flow control for whatever you want to do
             test_call(args)
-            #find_best_fit(args, bfpath)
+            find_best_fit(args, bfpath)
             #args["model_name"]=model_name #Reset this
             #test_call(args, bfpath=bfpath, testbf=True)
             args["model_name"]=model_name #Reset this
-            do_mcmc(args, bfpath, chainpath, likespath)
+            #do_mcmc(args, bfpath, chainpath, likespath)
