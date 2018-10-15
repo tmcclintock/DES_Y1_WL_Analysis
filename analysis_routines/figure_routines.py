@@ -108,6 +108,7 @@ def plot_boost_and_resid(params, args, i, j):
     Lm, c, tau, fmis, Am, B0, Rs = params
     Rdata = args['Rdata']
     cuts = args['cuts']
+    print("Cuts are:",cuts)
     cov = args['cov']
     z = args['z']
     lo,hi = cuts
@@ -158,6 +159,7 @@ def plot_fourpanels(params, args, i, j):
     dserr = np.sqrt(np.diag(cov))
     dserr_fixed = fix_errorbars(ds, dserr)
     Rmodel, DSfull, DSc, DSm, boost, aDS = calc_DS_model(params, args)
+    
     #Convert to Mpc physical
     Rmodel /= h*(1+z)
     DSfull *= h*(1+z)**2
@@ -276,10 +278,10 @@ if __name__ == '__main__':
     else: covname = "SAC"
 
     #Loop over bins
-    for i in xrange(2, 1, -1): #z bins
+    for i in xrange(0, -1, -1): #z bins
         #if i <2: continue
-        for j in xrange(6, -1, -1): #lambda bins
-            if j > 6 or j < 6: continue
+        for j in xrange(3, 2, -1): #lambda bins
+            #if j > 6 or j < 6: continue
             paths, args = get_args_and_paths(name, i, j, model_name, blinded, cal, useJK)
             bfpath, chainpath, likespath = paths
             chain = np.loadtxt(chainpath)

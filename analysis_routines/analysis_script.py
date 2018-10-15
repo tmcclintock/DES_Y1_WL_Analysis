@@ -51,14 +51,14 @@ def do_mcmc(args, bfpath, chainpath, likespath):
     return
 
 if __name__ == '__main__':
-    name = "cal"
-    model_name = "Mc" #Mc, full, Afixed, cfixed
+    name = "y1"
+    model_name = "full" #Mc, full, Afixed, cfixed
     blinded = False
-    cal = True
+    cal = False
     useJK = False
 
     #Loop over bins
-    zhi, zlo = 3, 1 #0 is broken for cal right now
+    zhi, zlo = 2, 1
     lhi, llo = 6, 5
     for i in xrange(zhi, zlo, -1):#z bins #only 2,1,0 for y1 and sv but 3,2,1,0 for cal
         for j in xrange(lhi, llo, -1): #lambda bins

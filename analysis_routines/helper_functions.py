@@ -64,9 +64,9 @@ def get_args_and_paths(name, zi, lj, model_name, blinded=True, cal=False, useJK=
 
     #First fix the paths
     basesuffix = name+"_"+covname+"_z%d_l%d"%(zi, lj)
-    bfpath = "bestfits/bf_%s_%s_scatter0.20.txt"%(model_name, basesuffix)
-    chainpath   = "chains/chain_%s_%s_scatter0.20.txt"%(model_name, basesuffix)
-    likespath   = "chains/likes_%s_%s_scatter0.20.txt"%(model_name, basesuffix)
+    bfpath = "bestfits/bf_%s_%s.txt"%(model_name, basesuffix)
+    chainpath   = "chains/chain_%s_%s.txt"%(model_name, basesuffix)
+    likespath   = "chains/likes_%s_%s.txt"%(model_name, basesuffix)
     paths = [bfpath, chainpath, likespath]
     
     #Now prep the args
