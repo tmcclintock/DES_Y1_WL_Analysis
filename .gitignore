@@ -1,3 +1,7 @@
+cosmo_variations/bestfits
+cosmo_variations/input_files
+cosmo_variations/chains
+
 boost_fitting/**/*.txt
 boost_fitting/**/*.png
 
