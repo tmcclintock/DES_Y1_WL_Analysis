@@ -17,7 +17,7 @@ plt.rc("text", usetex=True)
 plt.rc("font", size=20, family="serif")
 plt.rc("errorbar", capsize=3)
 
-DSlabel = r"$\Delta\Sigma$ [ M$_\odot$/pc$^2$]"
+DSlabel = r"$\Delta\Sigma$ [M$_\odot$/pc$^2$]"
 Rlabel  = r"$R\ [{\rm Mpc}]$"
 
 y1zlabels = [r"$z\in[0.2;0.35)$", r"$z\in[0.35;0.5)$", r"$z\in[0.5;0.65)$"]
@@ -294,6 +294,6 @@ if __name__ == '__main__':
             print means
             params = means
             params = model_swap(params, args)
-            #plot_just_DS(params, args, i, j)
+            plot_just_DS(params, args, i, j)
             #plot_boost_and_resid(params, args, i, j)
-            plot_fourpanels(params, args, i, j)
+            #plot_fourpanels(params, args, i, j)
