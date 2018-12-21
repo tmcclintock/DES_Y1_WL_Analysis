@@ -7,7 +7,7 @@ This makes it much easier to build the arguments dictionary.
 import os
 import numpy as np
 import cluster_toolkit as ct
-from scipy.interpolate import interp2d
+import scipy.interpolate as interp
 import blinding
 
 class Helper(object):
@@ -121,12 +121,7 @@ class Helper(object):
         """
         Attach the cosmology object to the arguments.
         """
-        pars = ['h', 'Omega_m', 'Omega_b', 'Omega_de', 'Omega_k',
-                 'sigma8', 'ns']
-        for p in pars:
-            if p not in cosmo:
-                raise Exception("%s missing from cosmology dictionary."%p)
-        if name is None:
+        if name is not None:
             print("\t'name':%s supplied, using a pre-defined cosmology."%name)
             if name not in ['fox', 'Y1']:
                 raise Exception("Cosmology %s not pre-defined."%name)
@@ -146,6 +141,11 @@ class Helper(object):
                          'Omega_k'     : 0.0,
                          'sigma8' : 0.835,
                          'ns'     : 0.962}
+        pars = ['h', 'Omega_m', 'Omega_b', 'Omega_de', 'Omega_k',
+                'sigma8', 'ns']
+        for p in pars:
+            if p not in cosmo:
+                raise Exception("%s missing from cosmology dictionary."%p)
         #Save the cosmology dictionaty
         self.args['cosmology'] = cosmo
         return
@@ -153,8 +153,8 @@ class Helper(object):
     def add_stack_data(self, z, richness, Sigma_crit_inv):
         """
         Add some data about the stack to the arguments.
-        Note that the input units for Sigma_crit_inv is Msun/pc^2 physical,
-        and here it is converted to h*Msun/pc^2 comoving.
+        Note that the input units for Sigma_crit_inv is pc^2/Msun physical,
+        and here it is converted to pc^2/h*Msun comoving.
         """
         if "cosmology" not in self.args:
             raise Exception("Must add a cosmology dictionary before adding "+\
@@ -163,25 +163,62 @@ class Helper(object):
         self.args['lam'] = richness
         Rlam = (richness/100.)**0.2 #Mpc/h comoving
         self.args['Rlam'] = Rlam
-        self.args['SCI_physical_no_h'] = Sigma_crit_inv
         h = self.args['cosmology']['h']
-        self.args['SCI_comoving_with_h'] = Sigma_crit_inv*h*(1+z)**2
+        self.args['Sigma_crit_inv'] = Sigma_crit_inv*h*(1+z)**2
         return
 
-    def precompute_ximm(self, k, P_lin, P_nonlin):
+    def compute_power_spectra(self, z):
+        try:
+            from classy import Class
+        except ImportError:
+            print("Cannot precompute power spectra because CLASS "+\
+                  "is not installed.")
+            return
+        cos = self.args['cosmology']
+        h = cos['h']
+        params = {
+            'output': 'mPk',
+            "h":h,
+            "sigma8":cos['sigma8'],
+            "n_s":cos['ns'],
+            "Omega_b":cos['Omega_b'],
+            "Omega_cdm":cos['Omega_m'] - cos['Omega_b'],
+            'P_k_max_1/Mpc':1000.,
+            'z_max_pk':1.0,
+            'non linear':'halofit'}
+        class_cosmo = Class()
+        class_cosmo.set(params)
+        class_cosmo.compute()
+        k = np.logspace(-5, 3, num=4000) #1/Mpc comoving
+        kh = k/h #h/Mpc comoving
+        #P(k) are in Mpc^3/h^3 comoving
+        Pnl = np.array([class_cosmo.pk(ki, z) for ki in k])*h**3
+        Plin = np.array([class_cosmo.pk_lin(ki, z) for ki in k])*h**3
+        self.args['k'] = kh
+        self.args['Plin'] = Plin
+        self.args['Pnl'] = Pnl
+        return
+
+    def precompute_ximm(self, k, P_lin, P_nl, use_internal=False):
         """
         Precompute the matter correlation function, computed from
-        either Plin or P_nonlin. Note that everything is comoving
+        either Plin or P_nonlin. Note that everything is comoving.
+        If we want, we can use the powe spectra computed internally
+        in this tool rather than the power spectra passed in.
         """
         r = np.logspace(-2, 3, num=1000) #Mpc/h comoving
+        if use_internal:
+            k = self.args['k']
+            P_lin = self.args['Plin']
+            P_nl = self.args['Pnl']
         xi_lin = ct.xi.xi_mm_at_R(r, k, P_lin)
-        xi_nl  = ct.xi.xi_mm_at_R(r, k, P_nonlin)
-        self.args['k'] = k
-        self.args['Plin'] = P_lin
-        self.args['Pnl'] = P_nonlin
+        xi_nl  = ct.xi.xi_mm_at_R(r, k, P_nl)
         self.args['r'] = r
         self.args['xilin'] = xi_lin
         self.args['xinl'] = xi_nl
+        self.args['k'] = k
+        self.args['Plin'] = P_lin
+        self.args['Pnl'] = P_nl
         return
 
     def create_concentration_spline(self):
@@ -202,8 +239,8 @@ class Helper(object):
         z = self.args['z']
         M = np.logspace(12, 17, 50)
         c = np.zeros_like(M)
-        for i in range(M):
-            c_array[j,i] = concentration.concentration(M[i],'200m',z=z,model='diemer15')
+        for i in range(len(M)):
+            c[i] = concentration.concentration(M[i],'200m',z=z,model='diemer15')
         self.args['cspline'] = interp.interp1d(M, c)
         return
 
