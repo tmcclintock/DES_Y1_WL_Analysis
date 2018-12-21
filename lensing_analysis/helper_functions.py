@@ -56,8 +56,10 @@ def get_output_paths(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True)
     likespath = "chains/likes_%s"%(suffix)
     return bfpath, chainpath, likespath
 
-def get_args(zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0.2, 999.],
+def get_args(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0.2, 999.],
              boost_threshold=1e-6):
+    if model_name not in ["full", "Afixed", "cfixed", "Mc", "M"]:
+        raise Exception("Invalid model name: %s"%model_name)
     if name not in ["Y1", "SV"]: #"fox_sim"]:
         raise Exception("'name':%s must be either Y1 or SV."%name)
     if covkind not in ["SAC", "JK"]:
@@ -138,7 +140,10 @@ def get_args(zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0.2, 999.],
 
     #Add analysis-specific entries to the dictionary here
     args = helper.args
-    #Omega_m
+    #Model name
+    args['model_name'] = model_name
+    #Useful cosmology parameters
+    args['h'] = args['cosmology']['h']
     args['Omega_m'] = args['cosmology']['Omega_m']
     #Edges of the radial bins
     h = args['cosmology']['h']
@@ -152,9 +157,11 @@ def get_args(zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0.2, 999.],
     #Blinding factors
     Blinding_amp, lam_exp, z_exp = blinding.get_blinding_variables()
     blinding_factor = np.log10(Blinding_amp) +  np.log10((lam/30.0)**lam_exp) + np.log10(((1+z)/1.5)**z_exp)
-    if not blinding:
+    if not blinded:
         blinding_factor *= 0
     args['blinding_factor'] = blinding_factor
+    #Model defaults
+    args['defaults'] = get_model_defaults(args['h'])
     return args
 
 def get_model_defaults(h):

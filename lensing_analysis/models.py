@@ -30,15 +30,15 @@ def model_swap(params, args):
 
 def get_delta_sigma(params, args):
     lM, c, tau, fmis, Am, B0, Rs = params
-    Rmodel = args['Rmodel'] #3d r; Mpc/h
+    Rmodel = args['r'] #3d r; Mpc/h
     k = args['k'] #h/Mpc
     Plin = args['Plin'] #(Mpc/h)^3
     xi_mm = args['xi_nl'] #can also choose xi_lin
     Rlam = args['Rlam'] #Mpc/h
     z = args['z']
     h = args['h']
-    om = args['om']
-    sigma_crit_inv = args['sigma_crit_inv'] #pc^2/hMsun comoving
+    om = args['Omega_m']
+    Sigma_crit_inv = args['Sigma_crit_inv'] #pc^2/hMsun comoving
     Redges = args['Redges'] #Mpc/h comoving
     M = 10**lM #Msun/h
     xi_nfw   = ct.xi.xi_nfw_at_R(Rmodel, M, c, om)
@@ -59,13 +59,13 @@ def get_delta_sigma(params, args):
     boost_model = ct.boostfactors.boost_nfw_at_R(Rp, B0, Rs*h*(1+z))
 
     full_DeltaSigma /= boost_model #de-boost the model
-    full_DeltaSigma /= (1-full_Sigma*sigma_crit_inv) #Reduced shear
+    full_DeltaSigma /= (1-full_Sigma*Sigma_crit_inv) #Reduced shear
     #Here, DeltaSigma is in Msun h/pc^2 comoving
     
     ave_DeltaSigma = ct.averaging.average_profile_in_bins(Redges, Rp, full_DeltaSigma)
     return Rp, Sigma, Sigma_mis, DeltaSigma, DeltaSigma_mis, full_DeltaSigma, ave_DeltaSigma, boost_model
 
-def get_boost_model(params, args):
+def get_boost_model(params, Rb):
     lM, c, tau, fmis, Am, B0, Rs = params
-    Rb = args['Rb'] #Mpc physical
+    #Rb is Mpc physical; same units as Rs
     return ct.boostfactors.boost_nfw_at_R(Rb, B0, Rs)

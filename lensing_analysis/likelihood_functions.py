@@ -20,9 +20,9 @@ def lnprior(params, Am_prior, Am_prior_var):
 
 def lnlike(params, args):
     z = args['z']
-    inds = args['inds']
-    ds = args['ds']
-    icov = args['icov']
+    inds = args['lensing_kept_indices']
+    ds = args['DeltaSigma_cut']
+    icov = args['iC_cut']
     h = args['h']
     Rp, Sigma, Sigma_mis, DScen, DSmis, full_DeltaSigma, ave_DeltaSigma, boost_model_at_Rmodel = get_delta_sigma(params, args)
     ds_model = ave_DeltaSigma[inds] #Scale cuts
@@ -30,9 +30,9 @@ def lnlike(params, args):
     X = ds - ds_model
     LLDS = -0.5*np.dot(X, np.dot(icov, X))
     
-    Bp1 = args['Bp1']
-    iBcov = args['iBcov']
-    boost_model = get_boost_model(params, args)
+    Bp1 = args['Bp1_cut']
+    iBcov = args['iBcov_cut']
+    boost_model = get_boost_model(params, args['Rb_cut'])
     Xb = Bp1 - boost_model
     LLboost = -0.5*np.dot(Xb, np.dot(iBcov, Xb))
     return LLDS + LLboost

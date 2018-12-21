@@ -8,7 +8,6 @@ import os
 import numpy as np
 import cluster_toolkit as ct
 import scipy.interpolate as interp
-import blinding
 
 class Helper(object):
     """
@@ -214,8 +213,8 @@ class Helper(object):
         xi_lin = ct.xi.xi_mm_at_R(r, k, P_lin)
         xi_nl  = ct.xi.xi_mm_at_R(r, k, P_nl)
         self.args['r'] = r
-        self.args['xilin'] = xi_lin
-        self.args['xinl'] = xi_nl
+        self.args['xi_lin'] = xi_lin
+        self.args['xi_nl'] = xi_nl
         self.args['k'] = k
         self.args['Plin'] = P_lin
         self.args['Pnl'] = P_nl
