@@ -1,0 +1,3 @@
+## Weak lensing analysis
+
+This directory contains the fiducial weak lensing analysis for the DES Y1 mass calibration work. The structure is as follows: `models.py` contains the actual lensing and boost factor models, `likelihood_functions.py` contains the associated likelihoods for the different parts of the model (including functional forms for priors), `analysis_script.py` is the driver which can be used to do either MLE or MCMC and is where one can specify which type of analysis (full, no systematics, etc.), and finally `helper_functions.py` is used to create dictionaries that need to be past around. Additionally, `blinding.py` is used to create the blinding file needed to keep the masses blinded.
