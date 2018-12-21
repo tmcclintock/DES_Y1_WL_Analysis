@@ -1,3 +1,6 @@
+#data files, for now
+data_files
+
 cosmo_variations/bestfits
 cosmo_variations/input_files
 cosmo_variations/chains

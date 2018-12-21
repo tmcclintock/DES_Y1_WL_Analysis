@@ -43,9 +43,21 @@ calzspath = calbase+"CAL_meanz.txt"
 callamspath = calbase+"CAL_ps25_meanl.txt"
 """
 
+def get_output_paths(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True):
+    if model_name not in ["full", "Afixed", "cfixed", "Mc", "M"]:
+        raise Exception("Invalid model name: %s"%model_name)
+    if name not in ["Y1", "SV"]: #"fox_sim"]:
+        raise Exception("'name':%s must be either Y1 or SV."%name)
+    if covkind not in ["SAC", "JK"]:
+        raise Exception("Covariance type %s not recognized. Use either SAC or JK."%covkind)
+    suffix = "%s_%s_%s_z%d_l%d"%(model_name, name, covkind, zi, lj)
+    bfpath = "bestfits/bf_%s.txt"%(suffix)
+    chainpath = "chains/chain_%s"%(suffix)
+    likespath = "chains/likes_%s"%(suffix)
+    return bfpath, chainpath, likespath
+
 def get_args(zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0.2, 999.],
              boost_threshold=1e-6):
-    helper = helper_tool.Helper()
     if name not in ["Y1", "SV"]: #"fox_sim"]:
         raise Exception("'name':%s must be either Y1 or SV."%name)
     if covkind not in ["SAC", "JK"]:
@@ -79,6 +91,10 @@ def get_args(zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0.2, 999.],
         #Shape noise
         m = 0.012
         m_var = 0.013**2
+        #Power spectra
+        k = np.loadtxt("../data_files/Y1_data/P_files/k.txt")
+        Plin = np.loadtxt("../data_files/Y1_data/P_files/plin_z%d_l%d.txt"%(zi,lj))
+        Pnl = np.loadtxt("../data_files/Y1_data/P_files/pnl_z%d_l%d.txt"%(zi,lj))
     else: #name == "SV"
         dpath = svdata%(zi,lj)
         if covkind == "SAC":
@@ -100,7 +116,10 @@ def get_args(zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0.2, 999.],
         #Shape noise -- approximately the same as Y1
         m = 0.012
         m_var = 0.013**2
-
+        #Power spectra
+        k = np.loadtxt("../data_files/SV_data/P_files/k.txt")
+        Plin = np.loadtxt("../data_files/SV_data/P_files/plin_z%d_l%d.txt"%(zi,lj))
+        Pnl = np.loadtxt("../data_files/SV_data/P_files/pnl_z%d_l%d.txt"%(zi,lj))
 
     #Fetch dictionary entries by the helper tool
     helper = helper_tool.Helper()
@@ -110,8 +129,11 @@ def get_args(zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0.2, 999.],
     helper.get_boost_covariance(bcpath, N_JK, use_SV_boost)
     helper.add_cosmology_dictionary(None, cosmo_name)
     helper.add_stack_data(z, lam, SCI)
-    helper.compute_power_spectra(z)
-    helper.precompute_ximm(0,0,0, use_internal=True)
+    #comment out the following two lines and comment out the following
+    #if you want power spectra computed at runtime
+    #helper.compute_power_spectra(z)
+    #helper.precompute_ximm(0,0,0, use_internal=True
+    helper.precompute_ximm(k,Plin,Pnl)
     helper.create_concentration_spline()
 
     #Add analysis-specific entries to the dictionary here
@@ -181,3 +203,4 @@ def get_model_start(model_name, lam, h):
 
 if __name__=="__main__":
     args = get_args(0, 3, name="Y1", covkind="SAC", blinded=True, cuts=[0.2, 999.], boost_threshold=1e-6)
+    paths = get_output_paths("full", 0, 3, name="Y1", covkind="SAC", blinded=True)
