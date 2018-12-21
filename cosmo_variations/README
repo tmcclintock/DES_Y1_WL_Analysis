@@ -1,4 +1,0 @@
-So here's the thing, this tarball contains a correction factor for each deltasigma profile
-the first value is the multiplicative factor to rescale the DeltaSigma, and also the Covariance with the square of this value (edited)
-the last value is the multiplicative factor to rescale the radius
-the third value is the Sigma_crit^-1 at the new cosmology, I think you need this for kappa
