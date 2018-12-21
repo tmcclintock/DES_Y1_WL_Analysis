@@ -4,6 +4,7 @@ for the lensing analysis. This tool is now an object that can take in
 arbitrary paths for things like data vectors and covariance matrices.
 This makes it much easier to build the arguments dictionary.
 """
+import os
 import numpy as np
 import cluster_toolkit as ct
 from scipy.interpolate import interp2d
@@ -16,7 +17,7 @@ class Helper(object):
     def __init__(self):
         self.args = {}
 
-    def get_data(self, datapath, lowcut=0.2, highcut=999):
+    def get_lensing_data(self, datapath, lowcut=0.2, highcut=999):
         """
         Read in the data, assumed to be 5 columns
         with the first column being the central radial bin value
@@ -31,10 +32,11 @@ class Helper(object):
         self.args["R_cut"] = R[inds]
         self.args["DeltaSigma_all"] = ds
         self.args["DeltaSigma_cut"] = ds[inds]
-        self.args["kept_indices"] = inds
+        self.args["lensing_kept_indices"] = inds
+        self.args["lensing_cuts"] = [lowcut, highcut]
         return
 
-    def get_covariance(self, covpath, N_JK = None):
+    def get_lensing_covariance(self, covpath, N_JK = None):
         """
         Read in the covariance matrix. get_data() must be called
         first, so that the indices for the cut have been saved.
@@ -42,10 +44,10 @@ class Helper(object):
         If the covariance was JK estimated, apply a Hartlap correction
         according to the value of N_JK to the cut covariance matrix.
         """
-        if "kept_indices" not in self.args:
-            raise Exception("Must read in data with get_data() before "+\
-                            "reading in the covariance.")
-        inds = self.args["kept_indices"]
+        if "lensing_kept_indices" not in self.args:
+            raise Exception("Must read in data with get_lensing_data() "+
+                            "before reading in the covariance.")
+        inds = self.args["lensing_kept_indices"]
         cov = np.genfromtxt(covpath)
         cov_cut = cov[inds]
         cov_cut = cov_cut[:,inds]
@@ -56,18 +58,83 @@ class Helper(object):
         #Save the covariance and inverse covariance
         self.args["C_all"] = cov
         self.args["C_cut"] = cov_cut * Hartlap_factor
-        self.args["icov_cut"] = icov_cut / Hartlap_factor
+        self.args["iC_cut"] = icov_cut / Hartlap_factor
         return
+
+    def get_boost_data(self, boostpath, lowcut=0.2, highcut=999,
+                       threshold=1e-6):
+        """
+        Read in boost factor data. Assumed to be a 3 or 2 column file with
+        the format: R, Boost+1, Boosterr OR Boost+1, R.
+        """
+        try:
+            Rb, Bp1, Be = np.genfromtxt(boostpath, unpack=True)
+        except ValueError:
+            #Note, these are SV boost factors and they have a header
+            Bp1, Rb = np.genfromtxt(boostpath, unpack=True, skip_header=1)
+            Be = np.sqrt(10**-4.09 / Rb**2) #SV result
+        except:
+            assert False, "Input boost factor path is wrong."
+
+        threshold_cut = Be > threshold
+        Rb = Rb[threshold_cut]
+        Bp1 = Bp1[threshold_cut]
+        Be = Be[threshold_cut]
+        inds = (Rb > lowcut)*(Rb<highcut)
+        #Save all boost factor data
+        self.args['Rb_all'] = Rb
+        self.args['Bp1_all'] = Bp1
+        self.args['Be_all'] = Be
+        self.args['Rb_cut'] = Rb[inds]
+        self.args['Bp1_cut'] = Bp1[inds]
+        self.args['Be_cut'] = Be[inds]
+        self.args['threshold_cut'] = threshold_cut
+        self.args['boost_kept_indices'] = inds
+        return
+
+    def get_boost_covariance(self, boostcpath, N_JK=None, use_SV_model=False):
+        """
+        Obtain the covariance matrix for the boost factors.
+        """
+        if "boost_kept_indices" not in self.args:
+            raise Exception("Must read in data with get_boost_data() "+
+                            "before reading in the covariance.")
+        if use_SV_model:
+            Bcov = np.diag(self.args['Be_cut']**2)
+        else:
+            Bcov = np.loadtxt(boostcpath)
+        thc = self.args["threshold_cut"]
+        inds = self.args["boost_kept_indices"]
+        Bcov = Bcov[thc]
+        Bcov = Bcov[:,thc]
+        Bcov_cut = Bcov[inds]
+        Bcov_cut = Bcov_cut[:,inds]
+        Hartlap_factor = 1
+        if N_JK is not None:
+            Hartlap_factor = (N_JK-1.)/(N_JK-len(Bcov_cut)-2)
+        self.args["Bcov_all"] = Bcov
+        self.args["Bcov_cut"] = Bcov_cut * Hartlap_factor
+        self.args["iBcov_cut"] = np.linalg.inv(Bcov_cut) / Hartlap_factor
+        return
+
 
 if __name__ == "__main__":
     H = Helper()
     base = "/Users/tmcclintock/Data/DATA_FILES/y1_data_files/FINAL_FILES/"
     dpath = base + "full-unblind-v2-mcal-zmix_y1subtr_l%d_z%d_profile.dat"%(3,0)
     cpath = base + "SACs/SAC_z%d_l%d.txt"%(0,3)
-    H.get_data(dpath)
-    H.get_covariance(cpath)
+    H.get_lensing_data(dpath)
+    H.get_lensing_covariance(cpath)
     print(H.args.keys())
     import matplotlib.pyplot as plt
-    plt.errorbar(H.args["R_cut"], H.args["DeltaSigma_cut"], np.sqrt(H.args["C_cut"].diagonal()))
+    #plt.errorbar(H.args["R_cut"], H.args["DeltaSigma_cut"], np.sqrt(H.args["C_cut"].diagonal()))
+    #plt.loglog()
+    #plt.show()
+
+    dpath = base + "full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"%(3,0)
+    cpath = base + "full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"%(3,0)
+    H.get_boost_data(dpath)
+    H.get_boost_covariance(cpath, 100.)
+    plt.errorbar(H.args['Rb_cut'], H.args['Bp1_cut'], H.args['Be_cut'])
     plt.loglog()
     plt.show()
