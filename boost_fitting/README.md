@@ -1,1 +1,1 @@
-Here I fit just the boost factors. This is so that I can save the posteriors of the parameters and use them in the calibration.
+This directory contains scripts to fit boost factors independently of weak lensing profiles. The models are written in `model.py`, which is used by `likelihoods.py`. The main script made for running is `boost_analysis.py`, while `helper_functions.py` contains functions used to create dictionaries to pass around.
