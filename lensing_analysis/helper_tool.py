@@ -117,12 +117,101 @@ class Helper(object):
         self.args["iBcov_cut"] = np.linalg.inv(Bcov_cut) / Hartlap_factor
         return
 
+    def add_cosmology_dictionary(self, cosmo, name=None):
+        """
+        Attach the cosmology object to the arguments.
+        """
+        pars = ['h', 'Omega_m', 'Omega_b', 'Omega_de', 'Omega_k',
+                 'sigma8', 'ns']
+        for p in pars:
+            if p not in cosmo:
+                raise Exception("%s missing from cosmology dictionary."%p)
+        if name is None:
+            print("\t'name':%s supplied, using a pre-defined cosmology."%name)
+            if name not in ['fox', 'Y1']:
+                raise Exception("Cosmology %s not pre-defined."%name)
+            if name is "Y1":
+                cosmo = {'h'      : 0.7,
+                         'Omega_m'     : 0.3,
+                         'Omega_de'    : 0.7,
+                         'Omega_b'     : 0.05,
+                         'Omega_k'     : 0.0,
+                         'sigma8' : 0.8,
+                         'ns'     : 0.96}
+            elif name is "fox":
+                cosmo = {'h'      : 0.6704,
+                         'Omega_m'     : 0.318,
+                         'Omega_de'    : 0.682,
+                         'Omega_b'     : 0.049,
+                         'Omega_k'     : 0.0,
+                         'sigma8' : 0.835,
+                         'ns'     : 0.962}
+        #Save the cosmology dictionaty
+        self.args['cosmology'] = cosmo
+        return
+        
+    def add_stack_data(self, z, richness, Sigma_crit_inv):
+        """
+        Add some data about the stack to the arguments.
+        Note that the input units for Sigma_crit_inv is Msun/pc^2 physical,
+        and here it is converted to h*Msun/pc^2 comoving.
+        """
+        if "cosmology" not in self.args:
+            raise Exception("Must add a cosmology dictionary before adding "+\
+                            "Sigma_crit_inv.")
+        self.args['z'] = z
+        self.args['lam'] = richness
+        Rlam = (richness/100.)**0.2 #Mpc/h comoving
+        self.args['Rlam'] = Rlam
+        self.args['SCI_physical_no_h'] = Sigma_crit_inv
+        h = self.args['cosmology']['h']
+        self.args['SCI_comoving_with_h'] = Sigma_crit_inv*h*(1+z)**2
+        return
+
+    def precompute_ximm(self, k, P_lin, P_nonlin):
+        """
+        Precompute the matter correlation function, computed from
+        either Plin or P_nonlin. Note that everything is comoving
+        """
+        r = np.logspace(-2, 3, num=1000) #Mpc/h comoving
+        xi_lin = ct.xi.xi_mm_at_R(r, k, P_lin)
+        xi_nl  = ct.xi.xi_mm_at_R(r, k, P_nonlin)
+        self.args['k'] = k
+        self.args['Plin'] = P_lin
+        self.args['Pnl'] = P_nonlin
+        self.args['r'] = r
+        self.args['xilin'] = xi_lin
+        self.args['xinl'] = xi_nl
+        return
+
+    def create_concentration_spline(self):
+        """
+        Creates a spline for the concentration using colossus.
+        """
+        try:
+            from colossus.halo import concentration
+            from colossus.cosmology import cosmology
+        except ImportError:
+            print("colossus not installed. No concentration spline available.")
+            return
+        cosmo = self.args['cosmology']
+        cos = {'flat':True,'H0':cosmo['h']*100.,'Om0':cosmo['Omega_m'],
+               'Ob0':cosmo['Omega_b'],'sigma8':cosmo['sigma8'],'ns':cosmo['ns']}
+        cosmology.addCosmology('fiducial', cos)
+        cosmology.setCosmology('fiducial')
+        z = self.args['z']
+        M = np.logspace(12, 17, 50)
+        c = np.zeros_like(M)
+        for i in range(M):
+            c_array[j,i] = concentration.concentration(M[i],'200m',z=z,model='diemer15')
+        self.args['cspline'] = interp.interp1d(M, c)
+        return
 
 if __name__ == "__main__":
     H = Helper()
-    base = "/Users/tmcclintock/Data/DATA_FILES/y1_data_files/FINAL_FILES/"
-    dpath = base + "full-unblind-v2-mcal-zmix_y1subtr_l%d_z%d_profile.dat"%(3,0)
-    cpath = base + "SACs/SAC_z%d_l%d.txt"%(0,3)
+    base = "../data_files/"
+    dpath = base + "Y1_data/full-unblind-v2-mcal-zmix_y1subtr_l%d_z%d_profile.dat"%(3,0)
+    cpath = base + "Y1_data/SACs/SAC_z%d_l%d.txt"%(0,3)
     H.get_lensing_data(dpath)
     H.get_lensing_covariance(cpath)
     print(H.args.keys())
@@ -131,8 +220,8 @@ if __name__ == "__main__":
     #plt.loglog()
     #plt.show()
 
-    dpath = base + "full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"%(3,0)
-    cpath = base + "full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"%(3,0)
+    dpath = base + "Y1_data/full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"%(3,0)
+    cpath = base + "Y1_data/full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost_cov.dat"%(3,0)
     H.get_boost_data(dpath)
     H.get_boost_covariance(cpath, 100.)
     plt.errorbar(H.args['Rb_cut'], H.args['Bp1_cut'], H.args['Be_cut'])
