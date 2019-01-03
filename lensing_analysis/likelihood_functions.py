@@ -35,6 +35,8 @@ def lnlike(params, args):
     boost_model = get_boost_model(params, args['Rb_cut'])
     Xb = Bp1 - boost_model
     LLboost = -0.5*np.dot(Xb, np.dot(iBcov, Xb))
+    print("Lnlike DS = ",LLDS)
+    print("Lnlike boost = ",LLboost)
     return LLDS + LLboost
 
 def lnprob(params, args):

@@ -30,6 +30,7 @@ def model_swap(params, args):
 
 def get_delta_sigma(params, args):
     lM, c, tau, fmis, Am, B0, Rs = params
+    print("Params are:\n\t",params)
     Rmodel = args['r'] #3d r; Mpc/h
     k = args['k'] #h/Mpc
     Plin = args['Plin'] #(Mpc/h)^3
@@ -63,9 +64,11 @@ def get_delta_sigma(params, args):
     #Here, DeltaSigma is in Msun h/pc^2 comoving
     
     ave_DeltaSigma = ct.averaging.average_profile_in_bins(Redges, Rp, full_DeltaSigma)
+    print("ave DeltaSigma is:\n\t",ave_DeltaSigma)
     return Rp, Sigma, Sigma_mis, DeltaSigma, DeltaSigma_mis, full_DeltaSigma, ave_DeltaSigma, boost_model
 
 def get_boost_model(params, Rb):
     lM, c, tau, fmis, Am, B0, Rs = params
     #Rb is Mpc physical; same units as Rs
+    print("boost model is:\n\t",ct.boostfactors.boost_nfw_at_R(Rb, B0, Rs))
     return ct.boostfactors.boost_nfw_at_R(Rb, B0, Rs)
