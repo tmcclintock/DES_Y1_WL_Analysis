@@ -78,6 +78,7 @@ def get_args(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0
         else: #covkind == "JK"
             cpath = y1JK%(lj,zk)
             N_JK = 100.
+        N_JK_BOOST = 100. #Always using boost JK matrix
         bdpath = y1boost%(lj,zi)
         bcpath = y1boostJK%(lj,zi)
         z = y1zs[zi,lj]
@@ -128,7 +129,7 @@ def get_args(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0
     helper.get_lensing_data(dpath, cuts[0], cuts[1])
     helper.get_lensing_covariance(cpath, N_JK)
     helper.get_boost_data(bdpath, cuts[0], cuts[1], boost_threshold)
-    helper.get_boost_covariance(bcpath, N_JK, use_SV_boost)
+    helper.get_boost_covariance(bcpath, N_JK_BOOST, use_SV_boost)
     helper.add_cosmology_dictionary(None, cosmo_name)
     helper.add_stack_data(z, lam, SCI)
     #comment out the following two lines and comment out the following

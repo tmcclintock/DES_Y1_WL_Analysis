@@ -111,9 +111,11 @@ class Helper(object):
         Bcov = Bcov[:,thc]
         Bcov_cut = Bcov[inds]
         Bcov_cut = Bcov_cut[:,inds]
+        print("unmodified Bcov: ", Bcov_cut[0])
         Hartlap_factor = 1
         if N_JK is not None:
             Hartlap_factor = (N_JK-1.)/(N_JK-len(Bcov_cut)-2)
+        print("Hartlap factor: ", Hartlap_factor)
         self.args["Bcov_all"] = Bcov
         self.args["Bcov_cut"] = Bcov_cut * Hartlap_factor
         self.args["iBcov_all"] = np.linalg.inv(Bcov) / Hartlap_factor
