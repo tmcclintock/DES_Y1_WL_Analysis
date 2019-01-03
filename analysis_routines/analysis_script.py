@@ -72,7 +72,7 @@ if __name__ == '__main__':
             print i,j, args['blinding_factor']
             #Flow control for whatever you want to do
             test_call(args)
-            find_best_fit(args, bfpath)
+            #find_best_fit(args, bfpath)
             #args["model_name"]=model_name #Reset this
             #test_call(args, bfpath=bfpath, testbf=True)
             args["model_name"]=model_name #Reset this
