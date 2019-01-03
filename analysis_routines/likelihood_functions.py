@@ -40,6 +40,7 @@ def lnlike(params, args):
     print("z = ",z)
     print("h = ",h)
     print(inds)
+    print("Bp1: ",Bp1)
     return LLDS + LLboost
 
 def lnprob(params, args):
