@@ -200,6 +200,7 @@ def get_boost_data_and_cov(zi, lj, lowcut = 0.2, highcut = 999, usey1=True, alld
         Bcov = Bcov[:,indices]
         Njk = 100.
         D = len(Rb)
+        print("unmodified Bcov: ",Bcov[0])
         Bcov = Bcov*((Njk-1.)/(Njk-D-2)) #Hartlap correction
         if diag_only: Bcov = np.diag(Be**2)
         #Note: the boost factors don't have the same number of radial bins
