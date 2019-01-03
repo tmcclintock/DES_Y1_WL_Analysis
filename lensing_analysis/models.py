@@ -70,5 +70,6 @@ def get_delta_sigma(params, args):
 def get_boost_model(params, Rb):
     lM, c, tau, fmis, Am, B0, Rs = params
     #Rb is Mpc physical; same units as Rs
+    print("Rb: ",Rb)
     print("boost model is:\n\t",ct.boostfactors.boost_nfw_at_R(Rb, B0, Rs))
     return ct.boostfactors.boost_nfw_at_R(Rb, B0, Rs)

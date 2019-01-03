@@ -41,6 +41,7 @@ def lnlike(params, args):
     print("h = ",h)
     print(inds)
     print("Bp1: ",Bp1)
+    print("iB[0]: ",iBcov[0])
     return LLDS + LLboost
 
 def lnprob(params, args):
