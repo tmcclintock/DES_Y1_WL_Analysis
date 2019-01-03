@@ -51,13 +51,16 @@ class Helper(object):
         cov_cut = cov[inds]
         cov_cut = cov_cut[:,inds]
         icov_cut = np.linalg.inv(cov_cut)
+        icov_all = np.linalg.inv(cov)
         Hartlap_factor = 1
         if N_JK is not None:
             Hartlap_factor = (N_JK-1.)/(N_JK-len(cov_cut)-2)
         #Save the covariance and inverse covariance
         self.args["C_all"] = cov
+        self.args["iC_all"] = icov_all / Hartlap_factor
         self.args["C_cut"] = cov_cut * Hartlap_factor
         self.args["iC_cut"] = icov_cut / Hartlap_factor
+
         return
 
     def get_boost_data(self, boostpath, lowcut=0.2, highcut=999,
@@ -113,6 +116,7 @@ class Helper(object):
             Hartlap_factor = (N_JK-1.)/(N_JK-len(Bcov_cut)-2)
         self.args["Bcov_all"] = Bcov
         self.args["Bcov_cut"] = Bcov_cut * Hartlap_factor
+        self.args["iBcov_all"] = np.linalg.inv(Bcov) / Hartlap_factor
         self.args["iBcov_cut"] = np.linalg.inv(Bcov_cut) / Hartlap_factor
         return
 

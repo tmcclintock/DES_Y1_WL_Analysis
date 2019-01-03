@@ -21,11 +21,11 @@ def lnprior(params, Am_prior, Am_prior_var):
 def lnlike(params, args):
     z = args['z']
     inds = args['lensing_kept_indices']
-    ds = args['DeltaSigma_cut']
-    icov = args['iC_cut']
+    ds = args['DeltaSigma_all']#_cut']
+    icov = args['iC_all']#_cut']
     h = args['h']
     Rp, Sigma, Sigma_mis, DScen, DSmis, full_DeltaSigma, ave_DeltaSigma, boost_model_at_Rmodel = get_delta_sigma(params, args)
-    ds_model = ave_DeltaSigma[inds] #Scale cuts
+    ds_model = ave_DeltaSigma#[inds] #Scale cuts
     ds_model *= h*(1+z)**2 #convert to Msun/pc^2 physical
     X = ds - ds_model
     LLDS = -0.5*np.dot(X, np.dot(icov, X))
@@ -37,6 +37,10 @@ def lnlike(params, args):
     LLboost = -0.5*np.dot(Xb, np.dot(iBcov, Xb))
     print("Lnlike DS = ",LLDS)
     print("Lnlike boost = ",LLboost)
+    print("z = ",z)
+    print("h = ",h)
+    print(inds)
+    print("Bp1: ",Bp1)
     return LLDS + LLboost
 
 def lnprob(params, args):
