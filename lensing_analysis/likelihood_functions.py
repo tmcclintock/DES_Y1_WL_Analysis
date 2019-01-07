@@ -27,6 +27,15 @@ def lnlike(params, args):
     Rp, Sigma, Sigma_mis, DScen, DSmis, full_DeltaSigma, ave_DeltaSigma, boost_model_at_Rmodel = get_delta_sigma(params, args)
     ds_model = ave_DeltaSigma[inds] #Scale cuts
     ds_model *= h*(1+z)**2 #convert to Msun/pc^2 physical
+
+    #########
+    #MODIFY THE MODEL FOR THE ORIENTATION BIAS
+    #This makes the model mimic the "richness selection"
+    #rather than the mass selection in sims.
+    #########
+    Ratio = args['X_ratio']
+    ds_model *= Ratio
+    
     X = ds - ds_model
     LLDS = -0.5*np.dot(X, np.dot(icov, X))
     
@@ -35,9 +44,9 @@ def lnlike(params, args):
     boost_model = get_boost_model(params, args['Rb_cut'])
     Xb = Bp1 - boost_model
     LLboost = -0.5*np.dot(Xb, np.dot(iBcov, Xb))
-    print("R: ",args['R_all'])
-    print("R_cut: ",args['R_cut'])
-    print(X.shape)
+    #print("R: ",args['R_all'])
+    #print("R_cut: ",args['R_cut'])
+    #print(X.shape)
     #print("Lnlike DS = ",LLDS)
     #print("Lnlike boost = ",LLboost)
     #print("z = ",z)

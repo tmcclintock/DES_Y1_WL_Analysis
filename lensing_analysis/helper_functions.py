@@ -32,6 +32,9 @@ SCIs = np.loadtxt("../photoz_calibration/sigma_crit_inv.txt")
 delta_plus_1_all = np.loadtxt("../photoz_calibration/Y1_deltap1.txt")
 delta_plus_1_all_var = np.loadtxt("../photoz_calibration/Y1_deltap1_var.txt")
 
+#Orientation bias file paths
+X_ratio_path = "Ratio_data/X_ratio_z%d_l%d.txt"
+
 #paths to old simulation data - commented out for now
 """
 calbase = fullbase+"/DATA_FILES/calibration_data_files/"
@@ -163,6 +166,14 @@ def get_args(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0
     args['blinding_factor'] = blinding_factor
     #Model defaults
     args['defaults'] = get_model_defaults(args['h'])
+
+    #NEW - read in the orientation data, index it appropriately, and save
+    _, X, Xerr = np.loadtxt(X_ratio_path%(zi, lj), unpack=True)
+    inds = args["lensing_kept_indices"]
+    X = X[inds]
+    Xerr = Xerr[inds]
+    args['X_ratio'] = X
+    args['X_ratio_error'] = Xerr
     return args
 
 def get_model_defaults(h):
