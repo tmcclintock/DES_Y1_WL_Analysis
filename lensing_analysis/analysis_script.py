@@ -67,6 +67,9 @@ if __name__ == '__main__':
             #paths, args = get_args_and_paths(name, i, j, model_name, blinded, cal, useJK)
             
             bfpath, chainpath, likespath = paths
+            bfpath += ".orientation"
+            chainpath += ".orientation"
+            likespath += ".orientation"
             print "Working at z%d l%d for %s"%(i,j,name)
             print "\tMean z:%f\n\tMean lambda:%f"%(args['z'], args['lam'])
             print "Saving to:\n\t%s\n\t%s\n\t%s"%(bfpath, chainpath, likespath)
@@ -74,8 +77,8 @@ if __name__ == '__main__':
             print i,j, args['blinding_factor']
             #Flow control for whatever you want to do
             test_call(args)
-            #find_best_fit(args, bfpath)
-            #args["model_name"]=model_name #Reset this
-            #test_call(args, bfpath=bfpath, testbf=True)
+            find_best_fit(args, bfpath)
+            args["model_name"]=model_name #Reset this
+            test_call(args, bfpath=bfpath, testbf=True)
             args["model_name"]=model_name #Reset this
             #do_mcmc(args, bfpath, chainpath, likespath)
