@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     #Loop over bins
     zhi, zlo = 2, 1
-    lhi, llo = 6, 5
+    lhi, llo = 3, 2
     for i in xrange(zhi, zlo, -1):#z bins #only 2,1,0 for y1 and sv but 3,2,1,0 for cal
         for j in xrange(lhi, llo, -1): #lambda bins
             args = get_args(model_name, i, j, name, "SAC", blinded)
