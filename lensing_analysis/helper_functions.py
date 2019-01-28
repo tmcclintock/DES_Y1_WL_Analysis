@@ -4,6 +4,7 @@ This file contains functions used to make the analysis script easier to read. Th
 import numpy as np
 import blinding
 import helper_tool
+from scipy.interpolate import InterpolatedUnivariateSpline as IUS
 
 #Y1 paths
 y1 = "../data_files/Y1_data/"
@@ -168,12 +169,15 @@ def get_args(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0
     args['defaults'] = get_model_defaults(args['h'])
 
     #NEW - read in the orientation data, index it appropriately, and save
-    _, X, Xerr = np.loadtxt(X_ratio_path%(zi, lj), unpack=True)
+    RX, X, Xerr = np.loadtxt(X_ratio_path%(zi, lj), unpack=True)
     inds = args["lensing_kept_indices"]
     X = X[inds]
     Xerr = Xerr[inds]
     args['X_ratio'] = X
     args['X_ratio_error'] = Xerr
+    args['X_spline'] = IUS(RX, X, ext=3)
+    #Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h for the model
+    #args['X_continuous'] = 
     return args
 
 def get_model_defaults(h):
