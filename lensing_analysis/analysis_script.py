@@ -5,6 +5,7 @@ import os, sys
 
 def test_call(args, bfpath=None, testbf=False):
     guess = get_model_start(model_name, args['lam'], args['h'])
+    guess[0] = np.log10(4.592486e+14)
     if testbf:
         print "Testing bestfit"
         guess = np.loadtxt(bfpath) #Has everything
@@ -57,7 +58,7 @@ if __name__ == '__main__':
     useJK = False
 
     #Loop over bins
-    zhi, zlo = 1, -1
+    zhi, zlo = 2, -1
     lhi, llo = 6, 2
     for i in xrange(zhi, zlo, -1):#z bins #only 2,1,0 for y1 and sv but 3,2,1,0 for cal
         for j in xrange(lhi, llo, -1): #lambda bins

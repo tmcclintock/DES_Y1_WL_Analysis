@@ -63,7 +63,7 @@ def get_delta_sigma(params, args):
     boost_model = ct.boostfactors.boost_nfw_at_R(Rp, B0, Rs*h*(1+z))
 
     #FOR THE SIMULATION ANAYSIS I AM TURNING OFF ALL SYSTEMATICS
-    #SINCE THESE ARE NOT IN THE SIMS
+    #SINCE THESE ARE NONE IN THE SIMS
     full_DeltaSigma = DeltaSigma
 
     """

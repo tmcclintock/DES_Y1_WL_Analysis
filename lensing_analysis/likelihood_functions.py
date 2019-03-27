@@ -26,8 +26,10 @@ def lnlike(params, args):
     h = args['h']
     Rp, Sigma, Sigma_mis, DScen, DSmis, full_DeltaSigma, ave_DeltaSigma, boost_model_at_Rmodel = get_delta_sigma(params, args)
     ds_model = ave_DeltaSigma[inds] #Scale cuts
-    ds_model *= h*(1+z)**2 #convert to Msun/pc^2 physical
-
+    ds_model /= h*(1+z)**2 #convert to Msun/pc^2 physical
+    ds_plot = full_DeltaSigma /(h*(1+z)**2)
+    Rp *= h*(1+z)
+    
     #########
     #MODIFY THE MODEL FOR THE ORIENTATION BIAS
     #This makes the model mimic the "richness selection"

@@ -180,9 +180,9 @@ def get_args(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0
     #NEW - read in the orientation data, index it appropriately, and save
     #Update - now, we need to create a spline for X(R) and evaluate it at Rp
     Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h comoving projected
-    Rx, X, Xerr = np.loadtxt(X_ratio_path%(zi, lj), unpack=True)
-    Xspl = IUS(np.log(Rx), X, ext=3) #ext=3 means extrapolation returns the boundary value
-    args["X_Sigma_ratio_all_Rp"] = Xspl(np.log(Rp))
+    #Rx, X, Xerr = np.loadtxt(X_ratio_path%(zi, lj), unpack=True)
+    #Xspl = IUS(np.log(Rx), X, ext=3) #ext=3 means extrapolation returns the boundary value
+    #args["X_Sigma_ratio_all_Rp"] = Xspl(np.log(Rp))
     #inds = args["lensing_kept_indices"]
     #X = X[inds]
     #Xerr = Xerr[inds]
