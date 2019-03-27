@@ -7,7 +7,7 @@ This makes it much easier to build the arguments dictionary.
 import os
 import numpy as np
 import cluster_toolkit as ct
-import scipy.interpolate as interp
+from scipy.interpolate import InterpolatedUnivariateSpline as IUS
 
 class Helper(object):
     """
@@ -27,6 +27,7 @@ class Helper(object):
         inds = (R > lowcut)*(R < highcut)
         #Save the radii and profiles both with and without cuts
         #also save the indicies of the bins to keep
+        #print("R data all: ",R)
         self.args["R_all"] = R
         self.args["R_cut"] = R[inds]
         self.args["DeltaSigma_all"] = ds
@@ -128,7 +129,7 @@ class Helper(object):
         """
         if name is not None:
             print("\t'name':%s supplied, using a pre-defined cosmology."%name)
-            if name not in ['fox', 'Y1']:
+            if name not in ['fox', 'Y1', "buzzard"]:
                 raise Exception("Cosmology %s not pre-defined."%name)
             if name is "Y1":
                 cosmo = {'h'      : 0.7,
@@ -146,6 +147,15 @@ class Helper(object):
                          'Omega_k'     : 0.0,
                          'sigma8' : 0.835,
                          'ns'     : 0.962}
+            elif name is "buzzard":
+                cosmo = {'h'      : 0.7,
+                         'Omega_m'     : 0.286,
+                         'Omega_de'    : 0.682,
+                         'Omega_b'     : 0.047,
+                         'Omega_k'     : 0.0,
+                         'sigma8' : 0.82,
+                         'ns'     : 0.96,
+                         'N_eff': 3.04}
         pars = ['h', 'Omega_m', 'Omega_b', 'Omega_de', 'Omega_k',
                 'sigma8', 'ns']
         for p in pars:
@@ -192,7 +202,9 @@ class Helper(object):
             'z_max_pk':1.0,
             'non linear':'halofit'}
         class_cosmo = Class()
+        print params
         class_cosmo.set(params)
+        print("Computing power spectrum with Omega_m = %.3f"%(cos['Omega_m']))
         class_cosmo.compute()
         k = np.logspace(-5, 3, num=4000) #1/Mpc comoving
         kh = k/h #h/Mpc comoving
@@ -202,7 +214,7 @@ class Helper(object):
         self.args['k'] = kh
         self.args['Plin'] = Plin
         self.args['Pnl'] = Pnl
-        return
+        return kh, Plin, Pnl
 
     def precompute_ximm(self, k, P_lin, P_nl, use_internal=False):
         """
@@ -216,8 +228,8 @@ class Helper(object):
             k = self.args['k']
             P_lin = self.args['Plin']
             P_nl = self.args['Pnl']
-        xi_lin = ct.xi.xi_mm_at_R(r, k, P_lin)
-        xi_nl  = ct.xi.xi_mm_at_R(r, k, P_nl)
+        xi_lin = ct.xi.xi_mm_at_r(r, k, P_lin)
+        xi_nl  = ct.xi.xi_mm_at_r(r, k, P_nl)
         self.args['r'] = r
         self.args['xi_lin'] = xi_lin
         self.args['xi_nl'] = xi_nl
@@ -246,7 +258,7 @@ class Helper(object):
         c = np.zeros_like(M)
         for i in range(len(M)):
             c[i] = concentration.concentration(M[i],'200m',z=z,model='diemer15')
-        self.args['cspline'] = interp.interp1d(M, c)
+        self.args['cspline'] = IUS(M, c)
         return
 
 if __name__ == "__main__":

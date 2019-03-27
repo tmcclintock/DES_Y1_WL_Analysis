@@ -4,10 +4,13 @@ This file contains functions used to make the analysis script easier to read. Th
 import numpy as np
 import blinding
 import helper_tool
+from scipy.interpolate import InterpolatedUnivariateSpline as IUS
 
 #Y1 paths
 y1 = "../data_files/Y1_data/"
-y1data = y1+"full-unblind-v2-mcal-zmix_y1subtr_l%d_z%d_profile.dat"
+#y1data = y1+"full-unblind-v2-mcal-zmix_y1subtr_l%d_z%d_profile.dat"
+y1data = y1+"DS_MASSSELECTION_l%d_z%d.txt"
+
 y1SAC = y1+"SACs/SAC_z%d_l%d.txt"
 y1JK = y1+"full-unblind-v2-mcal-zmix_y1subtr_l%d_z%d_dst_cov.dat"
 y1boost = y1+"full-unblind-v2-mcal-zmix_y1clust_l%d_z%d_zpdf_boost.dat"
@@ -33,7 +36,7 @@ delta_plus_1_all = np.loadtxt("../photoz_calibration/Y1_deltap1.txt")
 delta_plus_1_all_var = np.loadtxt("../photoz_calibration/Y1_deltap1_var.txt")
 
 #Orientation bias file paths
-X_ratio_path = "Ratio_data/X_ratio_z%d_l%d.txt"
+X_ratio_path = "Ratio_data/X_Sigma_ratio_z%d_l%d.txt"
 
 #paths to old simulation data - commented out for now
 """
@@ -49,8 +52,8 @@ callamspath = calbase+"CAL_ps25_meanl.txt"
 def get_output_paths(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True):
     if model_name not in ["full", "Afixed", "cfixed", "Mc", "M"]:
         raise Exception("Invalid model name: %s"%model_name)
-    if name not in ["Y1", "SV"]: #"fox_sim"]:
-        raise Exception("'name':%s must be either Y1 or SV."%name)
+    if name not in ["Y1", "SV", "buzzard"]: #"fox_sim"]:
+        raise Exception("'name':%s must be either Y1, SV or buzzard."%name)
     if covkind not in ["SAC", "JK"]:
         raise Exception("Covariance type %s not recognized. Use either SAC or JK."%covkind)
     suffix = "%s_%s_%s_z%d_l%d"%(model_name, name, covkind, zi, lj)
@@ -63,8 +66,8 @@ def get_args(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0
              boost_threshold=1e-6):
     if model_name not in ["full", "Afixed", "cfixed", "Mc", "M"]:
         raise Exception("Invalid model name: %s"%model_name)
-    if name not in ["Y1", "SV"]: #"fox_sim"]:
-        raise Exception("'name':%s must be either Y1 or SV."%name)
+    if name not in ["Y1", "SV", "buzzard"]: #"fox_sim"]:
+        raise Exception("'name':%s must be either Y1, SV, or buzzard."%name)
     if covkind not in ["SAC", "JK"]:
         raise Exception("Covariance type %s not recognized. Use either SAC or JK."%covkind)
     if len(cuts) != 2:
@@ -73,7 +76,7 @@ def get_args(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0
         raise Exception("Scale cuts must be ascending.")
     
     #Branch to determind path names
-    if name == "Y1":
+    if name == "Y1" or name == "buzzard":
         dpath = y1data%(lj,zi)
         if covkind == "SAC":
             cpath = y1SAC%(zi,lj)
@@ -101,6 +104,11 @@ def get_args(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0
         k = np.loadtxt("../data_files/Y1_data/P_files/k.txt")
         Plin = np.loadtxt("../data_files/Y1_data/P_files/plin_z%d_l%d.txt"%(zi,lj))
         Pnl = np.loadtxt("../data_files/Y1_data/P_files/pnl_z%d_l%d.txt"%(zi,lj))
+        if name == "buzzard":
+            k = np.loadtxt("../data_files/Y1_data/P_files/k_buzzard.txt")
+            Plin = np.loadtxt("../data_files/Y1_data/P_files/plin_buzzard_z%d_l%d.txt"%(zi,lj))
+            Pnl = np.loadtxt("../data_files/Y1_data/P_files/pnl_buzzard_z%d_l%d.txt"%(zi,lj))
+
     else: #name == "SV"
         dpath = svdata%(zi,lj)
         if covkind == "SAC":
@@ -133,11 +141,13 @@ def get_args(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0
     helper.get_lensing_covariance(cpath, N_JK)
     helper.get_boost_data(bdpath, cuts[0], cuts[1], boost_threshold)
     helper.get_boost_covariance(bcpath, N_JK_BOOST, use_SV_boost)
+    if name == "buzzard":
+        cosmo_name = "buzzard"
     helper.add_cosmology_dictionary(None, cosmo_name)
     helper.add_stack_data(z, lam, SCI)
     #comment out the following two lines and comment out the following
     #if you want power spectra computed at runtime
-    #helper.compute_power_spectra(z)
+    #k, Plin, Pnl = helper.compute_power_spectra(z)
     #helper.precompute_ximm(0,0,0, use_internal=True
     helper.precompute_ximm(k,Plin,Pnl)
     helper.create_concentration_spline()
@@ -168,12 +178,16 @@ def get_args(model_name, zi, lj, name="Y1", covkind="SAC", blinded=True, cuts=[0
     args['defaults'] = get_model_defaults(args['h'])
 
     #NEW - read in the orientation data, index it appropriately, and save
-    _, X, Xerr = np.loadtxt(X_ratio_path%(zi, lj), unpack=True)
-    inds = args["lensing_kept_indices"]
-    X = X[inds]
-    Xerr = Xerr[inds]
-    args['X_ratio'] = X
-    args['X_ratio_error'] = Xerr
+    #Update - now, we need to create a spline for X(R) and evaluate it at Rp
+    Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h comoving projected
+    Rx, X, Xerr = np.loadtxt(X_ratio_path%(zi, lj), unpack=True)
+    Xspl = IUS(np.log(Rx), X, ext=3) #ext=3 means extrapolation returns the boundary value
+    args["X_Sigma_ratio_all_Rp"] = Xspl(np.log(Rp))
+    #inds = args["lensing_kept_indices"]
+    #X = X[inds]
+    #Xerr = Xerr[inds]
+    #args['X_ratio'] = X
+    #args['X_ratio_error'] = Xerr
     return args
 
 def get_model_defaults(h):

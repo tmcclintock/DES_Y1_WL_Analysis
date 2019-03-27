@@ -33,8 +33,8 @@ def lnlike(params, args):
     #This makes the model mimic the "richness selection"
     #rather than the mass selection in sims.
     #########
-    Ratio = args['X_ratio']
-    ds_model *= Ratio
+    #Ratio = args['X_ratio']
+    #ds_model *= Ratio
     
     X = ds - ds_model
     LLDS = -0.5*np.dot(X, np.dot(icov, X))

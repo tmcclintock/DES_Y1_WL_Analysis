@@ -41,28 +41,41 @@ def get_delta_sigma(params, args):
     om = args['Omega_m']
     Sigma_crit_inv = args['Sigma_crit_inv'] #pc^2/hMsun comoving
     Redges = args['Redges'] #Mpc/h comoving
+    #print("Redges: ", Redges)
     M = 10**lM #Msun/h
-    xi_nfw   = ct.xi.xi_nfw_at_R(Rmodel, M, c, om)
+    xi_nfw   = ct.xi.xi_nfw_at_r(Rmodel, M, c, om)
     bias = ct.bias.bias_at_M(M, k, Plin, om)
     xi_2halo = ct.xi.xi_2halo(bias, xi_mm)
     xi_hm    = ct.xi.xi_hm(xi_nfw, xi_2halo)
     Rp = np.logspace(-2, 2.4, 1000, base=10) #Mpc/h
     Sigma  = ct.deltasigma.Sigma_at_R(Rp, Rmodel, xi_hm, M, c, om)
+
+    #SELECTION CORRECTION BELOW
+    #here, we modify Sigma(R) by the ratio of RM selected Sigma profiles to same-mass selected
+    #Ratio = args["X_Sigma_ratio_all_Rp"]
+    #Sigma *= Ratio
+
     DeltaSigma = ct.deltasigma.DeltaSigma_at_R(Rp, Rp, Sigma, M, c, om)
     Rmis = tau*Rlam #Mpc/h
-    Sigma_mis  = ct.miscentering.Sigma_mis_at_R(Rp, Rp, Sigma, M, c, om, Rmis, kernel="exponential")
+    Sigma_mis  = ct.miscentering.Sigma_mis_at_R(Rp, Rp, Sigma, M, c, om, Rmis, kernel="gamma")
     DeltaSigma_mis = ct.miscentering.DeltaSigma_mis_at_R(Rp, Rp, Sigma_mis)
+    #Note: Rs is default in Mpc physical
+    boost_model = ct.boostfactors.boost_nfw_at_R(Rp, B0, Rs*h*(1+z))
 
+    #FOR THE SIMULATION ANAYSIS I AM TURNING OFF ALL SYSTEMATICS
+    #SINCE THESE ARE NOT IN THE SIMS
+    full_DeltaSigma = DeltaSigma
+
+    """
     full_Sigma = (1-fmis)*Sigma + fmis*Sigma_mis
     full_DeltaSigma = (1-fmis)*DeltaSigma + fmis*DeltaSigma_mis
     full_DeltaSigma *= Am #multiplicative bias
-    #Note: Rs is default in Mpc physical
-    boost_model = ct.boostfactors.boost_nfw_at_R(Rp, B0, Rs*h*(1+z))
 
     full_DeltaSigma /= boost_model #de-boost the model
     full_DeltaSigma /= (1-full_Sigma*Sigma_crit_inv) #Reduced shear
     #Here, DeltaSigma is in Msun h/pc^2 comoving
-    
+    """
+ 
     ave_DeltaSigma = ct.averaging.average_profile_in_bins(Redges, Rp, full_DeltaSigma)
     #print("ave DeltaSigma is:\n\t",ave_DeltaSigma)
     return Rp, Sigma, Sigma_mis, DeltaSigma, DeltaSigma_mis, full_DeltaSigma, ave_DeltaSigma, boost_model
