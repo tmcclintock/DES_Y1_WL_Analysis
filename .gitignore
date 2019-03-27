@@ -1,3 +1,7 @@
+lensing_analysis/Ratio_data/*
+lensing_analysis/bestfits/*
+lensing_analysis/chains/*
+
 #data files, for now
 data_files
 
