@@ -1,0 +1,11 @@
+name: l1test
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.8
+  - numpy
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - notebook
